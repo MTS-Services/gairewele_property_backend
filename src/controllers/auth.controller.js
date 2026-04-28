@@ -74,4 +74,125 @@ const me = async (req, res) => {
   return success(res, { user }, "Current user");
 };
 
-module.exports = { register, login, firebaseLogin, me };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new ApiError(400, "email is required");
+    await authService.forgotPassword({ email });
+    // Always return success to avoid revealing if email exists
+    return success(
+      res,
+      {},
+      "If that email is registered, an OTP has been sent",
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resendOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new ApiError(400, "email is required");
+    await authService.resendOtp({ email });
+    return success(
+      res,
+      {},
+      "If that email is registered, a new OTP has been sent",
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+const verifyOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) throw new ApiError(400, "email and otp are required");
+    const result = await authService.verifyOtp({ email, otp });
+    return success(
+      res,
+      result,
+      "OTP verified. Use the resetToken to set your new password.",
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new ApiError(
+        400,
+        "Reset token missing. Send it as: Authorization: Bearer <resetToken>",
+      );
+    }
+    const resetToken = authHeader.split(" ")[1];
+    const { newPassword, confirmPassword } = req.body;
+    if (!newPassword || !confirmPassword) {
+      throw new ApiError(400, "newPassword and confirmPassword are required");
+    }
+    if (newPassword.length < 6) {
+      throw new ApiError(400, "newPassword must be at least 6 characters");
+    }
+    await authService.resetPassword({
+      resetToken,
+      newPassword,
+      confirmPassword,
+    });
+    return success(res, {}, "Password reset successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
+const changePassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      throw new ApiError(
+        400,
+        "oldPassword, newPassword and confirmPassword are required",
+      );
+    }
+    if (newPassword.length < 6) {
+      throw new ApiError(400, "newPassword must be at least 6 characters");
+    }
+    await authService.changePassword({
+      userId: req.user.id,
+      oldPassword,
+      newPassword,
+      confirmPassword,
+    });
+    return success(res, {}, "Password changed successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const result = await authService.updateProfile({
+      userId: req.user.id,
+      data: req.body,
+    });
+    return success(res, result, "Profile updated successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  firebaseLogin,
+  me,
+  forgotPassword,
+  resendOtp,
+  verifyOtp,
+  resetPassword,
+  changePassword,
+  updateProfile,
+};

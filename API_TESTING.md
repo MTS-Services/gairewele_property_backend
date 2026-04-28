@@ -19,10 +19,11 @@ The token is returned by register / login. It expires in **30 days**.
 1. Create a new Postman **Collection** named `Gairewele Backend`.
 2. Go to the collection → **Variables** tab, add:
 
-   | Variable  | Initial value           |
-   | --------- | ----------------------- |
-   | `baseUrl` | `http://localhost:3000` |
-   | `token`   | _(leave empty)_         |
+   | Variable     | Initial value           |
+   | ------------ | ----------------------- |
+   | `baseUrl`    | `http://localhost:3000` |
+   | `token`      | _(leave empty)_         |
+   | `resetToken` | _(leave empty)_         |
 
 3. On every **register** and **login** request, add this to the **Tests** tab to auto-save the token:
 
@@ -202,6 +203,16 @@ Works for all roles.
 
 ---
 
+Step 1 — Create a Firebase test user
+Go to Firebase Console → Authentication → Users → Add User
+
+Enter any email + password, e.g.:
+
+Email: test@example.com
+Password: Test1234!
+Step 2 — Get the ID token via Postman
+POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDSZeI6VCobrbhf6izz8j4_s-f7WTkwoJg
+
 ## 5. Firebase Login
 
 **POST** `{{baseUrl}}/api/auth/firebase-login`
@@ -300,6 +311,262 @@ No request body.
 
 ---
 
+## 7. Update Profile _(Protected)_
+
+**PATCH** `{{baseUrl}}/api/auth/profile`
+
+**Headers**
+
+```
+Authorization: Bearer {{token}}
+```
+
+Send only the fields you want to update.
+
+**Body for USER**
+
+```json
+{
+  "fullName": "John Updated",
+  "image": "https://example.com/new-avatar.png"
+}
+```
+
+**Body for AGENT / DEVELOPER / OWNER** _(all optional)_
+
+```json
+{
+  "fullName": "Jane Updated",
+  "image": "https://example.com/avatar.png",
+  "phoneNumber": "+1234567890",
+  "whatsappNumber": "+1234567890",
+  "companyName": "New Realty Co",
+  "website": "https://newrealty.com",
+  "companyLogo": "https://example.com/logo.png"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "user": { "...updated user fields..." }
+  }
+}
+```
+
+**Errors**
+
+- `400` — No valid fields provided to update
+- `401` — unauthorized
+
+---
+
+## 8. Change Password _(Protected)_
+
+**PATCH** `{{baseUrl}}/api/auth/change-password`
+
+**Headers**
+
+```
+Authorization: Bearer {{token}}
+```
+
+**Body**
+
+```json
+{
+  "oldPassword": "OldPa$$w0rd123",
+  "newPassword": "NewPa$$w0rd123",
+  "confirmPassword": "NewPa$$w0rd123"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "success": true,
+  "message": "Password changed successfully",
+  "data": {}
+}
+```
+
+**Errors**
+
+- `400` — oldPassword, newPassword and confirmPassword are required
+- `400` — newPassword must be at least 6 characters
+- `400` — Passwords do not match
+- `400` — Old password is incorrect
+- `400` — This account uses social login and has no password to change
+- `401` — unauthorized
+
+---
+
+## 9. Forgot Password — Request OTP
+
+**POST** `{{baseUrl}}/api/auth/forgot-password`
+
+Sends a **5-digit OTP** to the provided email. Valid for **10 minutes**.
+
+**Body**
+
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Response 200** _(always succeeds to avoid email enumeration)_
+
+```json
+{
+  "success": true,
+  "message": "If that email is registered, an OTP has been sent",
+  "data": {}
+}
+```
+
+**Errors**
+
+- `400` — email is required
+
+---
+
+## 10. Resend OTP
+
+**POST** `{{baseUrl}}/api/auth/resend-otp`
+
+Invalidates the previous OTP and sends a fresh one.
+
+**Body**
+
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "success": true,
+  "message": "If that email is registered, a new OTP has been sent",
+  "data": {}
+}
+```
+
+**Errors**
+
+- `400` — email is required
+
+---
+
+## 11. Verify OTP
+
+**POST** `{{baseUrl}}/api/auth/verify-otp`
+
+Checks the OTP and — if valid — returns a short-lived **resetToken** (valid 15 minutes).  
+Pass this token to the reset-password step. The OTP is consumed and cannot be reused.
+
+**Body**
+
+```json
+{
+  "email": "john@example.com",
+  "otp": "48291"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "success": true,
+  "message": "OTP verified. Use the resetToken to set your new password.",
+  "data": {
+    "resetToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+> Add this to the **Tests** tab in Postman to auto-save the reset token:
+>
+> ```js
+> const res = pm.response.json();
+> if (res?.data?.resetToken) {
+>   pm.collectionVariables.set("resetToken", res.data.resetToken);
+> }
+> ```
+
+**Errors**
+
+- `400` — email and otp are required
+- `400` — Invalid OTP
+- `400` — OTP has expired
+
+---
+
+## 12. Reset Password
+
+**POST** `{{baseUrl}}/api/auth/reset-password`
+
+Send the `resetToken` as a **Bearer token** in the Authorization header.  
+Body only needs `newPassword` and `confirmPassword`.
+
+**Headers**
+
+```
+Authorization: Bearer {{resetToken}}
+```
+
+**Body**
+
+```json
+{
+  "newPassword": "NewPa$$w0rd123",
+  "confirmPassword": "NewPa$$w0rd123"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "success": true,
+  "message": "Password reset successfully",
+  "data": {}
+}
+```
+
+**Errors**
+
+- `400` — newPassword and confirmPassword are required
+- `400` — newPassword must be at least 6 characters
+- `400` — Passwords do not match
+- `400` — Reset token missing (no Authorization header)
+- `400` — Reset token is invalid or expired (token older than 15 minutes)
+
+---
+
+## Forgot Password — Full Flow
+
+```
+1. POST /api/auth/forgot-password   { email }                                      → OTP sent to email
+2. Check email inbox for 5-digit OTP
+3. POST /api/auth/verify-otp        { email, otp }                        → returns resetToken
+4. POST /api/auth/reset-password    { newPassword, confirmPassword }      → Authorization: Bearer {{resetToken}}
+```
+
+> If OTP expired or not received:  
+> `POST /api/auth/resend-otp { email }` → new OTP sent, old one invalidated
+
+---
+
 ## Error Response Format
 
 ```json
@@ -322,14 +589,20 @@ No request body.
 
 ## All Endpoints Summary
 
-| Method | URL                        | Auth | Description                  |
-| ------ | -------------------------- | ---- | ---------------------------- |
-| GET    | `/`                        | No   | Server status                |
-| GET    | `/api/health`              | No   | Health check                 |
-| POST   | `/api/auth/register`       | No   | Register (all roles)         |
-| POST   | `/api/auth/login`          | No   | Login with email + password  |
-| POST   | `/api/auth/firebase-login` | No   | Login with Firebase ID token |
-| GET    | `/api/auth/me`             | Yes  | Get current logged-in user   |
+| Method | URL                         | Auth | Description                        |
+| ------ | --------------------------- | ---- | ---------------------------------- |
+| GET    | `/`                         | No   | Server status                      |
+| GET    | `/api/health`               | No   | Health check                       |
+| POST   | `/api/auth/register`        | No   | Register (all roles)               |
+| POST   | `/api/auth/login`           | No   | Login with email + password        |
+| POST   | `/api/auth/firebase-login`  | No   | Login with Firebase ID token       |
+| GET    | `/api/auth/me`              | Yes  | Get current logged-in user         |
+| PATCH  | `/api/auth/profile`         | Yes  | Update profile                     |
+| PATCH  | `/api/auth/change-password` | Yes  | Change password (logged in)        |
+| POST   | `/api/auth/forgot-password` | No   | Send OTP to email                  |
+| POST   | `/api/auth/resend-otp`      | No   | Resend fresh OTP                   |
+| POST   | `/api/auth/verify-otp`      | No   | Verify OTP → get resetToken        |
+| POST   | `/api/auth/reset-password`  | No   | Reset password (Bearer resetToken) |
 
 ---
 
