@@ -78,72 +78,47 @@ Confirms the server is running.
 One endpoint handles all roles. Pass `role` to set the account type.  
 If `role` is omitted it defaults to `USER`.
 
+> **Content-Type:** `multipart/form-data` (use Postman's **Body → form-data** tab)
+
 ### 3a. Register as User
 
-```json
-{
-  "fullName": "John Doe",
-  "email": "john@example.com",
-  "password": "Pa$$w0rd123",
-  "image": "https://example.com/avatar.png"
-}
-```
+| Key        | Type | Required | Notes                                     |
+| ---------- | ---- | -------- | ----------------------------------------- |
+| `fullName` | Text | Yes      |                                           |
+| `email`    | Text | Yes      |                                           |
+| `password` | Text | Yes      |                                           |
+| `image`    | File | No       | Profile photo (jpg/png/gif/webp, max 5MB) |
 
-Required: `fullName`, `email`, `password`  
-Optional: `image`
+### 3b. Register as Agent / Developer / Owner
 
-### 3b. Register as Agent
-
-```json
-{
-  "fullName": "Jane Agent",
-  "email": "jane.agent@example.com",
-  "password": "Pa$$w0rd123",
-  "role": "AGENT",
-  "phoneNumber": "+1234567890",
-  "image": "https://example.com/avatar.png",
-  "whatsappNumber": "+1234567890",
-  "companyName": "Doe Realty",
-  "website": "https://doerealty.com",
-  "companyLogo": "https://example.com/logo.png"
-}
-```
-
-### 3c. Register as Developer
-
-Same as Agent body but `"role": "DEVELOPER"`.
-
-### 3d. Register as Owner
-
-Same as Agent body but `"role": "OWNER"`.
-
-> **Role rules:**  
-> `USER` → required: `fullName`, `email`, `password`  
-> `AGENT` / `DEVELOPER` / `OWNER` → also required: `phoneNumber`
+| Key              | Type | Required | Notes                            |
+| ---------------- | ---- | -------- | -------------------------------- |
+| `fullName`       | Text | Yes      |                                  |
+| `email`          | Text | Yes      |                                  |
+| `password`       | Text | Yes      |                                  |
+| `role`           | Text | Yes      | `AGENT`, `DEVELOPER`, or `OWNER` |
+| `phoneNumber`    | Text | Yes      |                                  |
+| `whatsappNumber` | Text | No       |                                  |
+| `companyName`    | Text | No       |                                  |
+| `website`        | Text | No       |                                  |
+| `image`          | File | No       | Profile photo (max 5MB)          |
+| `companyLogo`    | File | No       | Company logo (max 5MB)           |
 
 **Response 201**
 
 ```json
 {
   "success": true,
-  "message": "USER registered successfully",
+  "message": "AGENT registered successfully",
   "data": {
     "user": {
       "id": "uuid",
-      "fullName": "John Doe",
-      "email": "john@example.com",
-      "role": "USER",
-      "provider": "LOCAL",
-      "image": null,
-      "phoneNumber": null,
-      "whatsappNumber": null,
-      "companyName": null,
-      "website": null,
-      "companyLogo": null,
-      "isActive": true,
-      "isSuspended": false,
-      "createdAt": "2026-04-28T10:00:00.000Z",
-      "updatedAt": "2026-04-28T10:00:00.000Z"
+      "fullName": "Jane Agent",
+      "email": "jane@example.com",
+      "role": "AGENT",
+      "image": "https://backend.property-file.com/uploads/1714298400000-abc123.jpg",
+      "companyLogo": "https://backend.property-file.com/uploads/1714298400001-def456.png",
+      "...": "..."
     },
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
@@ -315,36 +290,25 @@ No request body.
 
 **PATCH** `{{baseUrl}}/api/auth/profile`
 
+> **Content-Type:** `multipart/form-data` (use Postman's **Body → form-data** tab)
+
 **Headers**
 
 ```
 Authorization: Bearer {{token}}
 ```
 
-Send only the fields you want to update.
+Send only the fields you want to update. All fields are optional.
 
-**Body for USER**
-
-```json
-{
-  "fullName": "John Updated",
-  "image": "https://example.com/new-avatar.png"
-}
-```
-
-**Body for AGENT / DEVELOPER / OWNER** _(all optional)_
-
-```json
-{
-  "fullName": "Jane Updated",
-  "image": "https://example.com/avatar.png",
-  "phoneNumber": "+1234567890",
-  "whatsappNumber": "+1234567890",
-  "companyName": "New Realty Co",
-  "website": "https://newrealty.com",
-  "companyLogo": "https://example.com/logo.png"
-}
-```
+| Key              | Type | Notes                                     |
+| ---------------- | ---- | ----------------------------------------- |
+| `fullName`       | Text |                                           |
+| `phoneNumber`    | Text |                                           |
+| `whatsappNumber` | Text |                                           |
+| `companyName`    | Text |                                           |
+| `website`        | Text |                                           |
+| `image`          | File | Profile photo (jpg/png/gif/webp, max 5MB) |
+| `companyLogo`    | File | Company logo (max 5MB)                    |
 
 **Response 200**
 
@@ -353,7 +317,14 @@ Send only the fields you want to update.
   "success": true,
   "message": "Profile updated successfully",
   "data": {
-    "user": { "...updated user fields..." }
+    "user": {
+      "id": "uuid",
+      "fullName": "Jane Updated",
+      "image": "https://backend.property-file.com/uploads/1714298400000-abc123.jpg",
+      "companyLogo": "https://backend.property-file.com/uploads/1714298400001-def456.png",
+      "phoneNumber": "+1234567890",
+      "...": "..."
+    }
   }
 }
 ```
@@ -361,6 +332,7 @@ Send only the fields you want to update.
 **Errors**
 
 - `400` — No valid fields provided to update
+- `400` — Only image files are allowed
 - `401` — unauthorized
 
 ---

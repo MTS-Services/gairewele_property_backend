@@ -263,8 +263,7 @@ const changePassword = async ({
 // Update Profile (authenticated)
 // =====================
 const updateProfile = async ({ userId, data }) => {
-  const allowedUser = ["fullName", "image"];
-  const allowedPro = [
+  const allowedFields = [
     "fullName",
     "image",
     "phoneNumber",
@@ -276,10 +275,6 @@ const updateProfile = async ({ userId, data }) => {
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new ApiError(404, "User not found");
-
-  const allowedFields = PROFESSIONAL_ROLES.includes(user.role)
-    ? allowedPro
-    : allowedUser;
 
   const updateData = {};
   for (const key of allowedFields) {

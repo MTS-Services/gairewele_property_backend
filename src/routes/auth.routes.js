@@ -1,14 +1,26 @@
 const router = require("express").Router();
 const authController = require("../controllers/auth.controller");
 const { authenticate } = require("../middleware/auth");
+const { upload } = require("../middleware/upload");
 
-router.post("/register", authController.register);
+// Accept image + companyLogo as multipart fields
+const profileUpload = upload.fields([
+  { name: "image", maxCount: 1 },
+  { name: "companyLogo", maxCount: 1 },
+]);
+
+router.post("/register", profileUpload, authController.register);
 router.post("/login", authController.login);
 router.post("/firebase-login", authController.firebaseLogin);
 router.get("/me", authenticate, authController.me);
 
 // Profile
-router.patch("/profile", authenticate, authController.updateProfile);
+router.patch(
+  "/profile",
+  authenticate,
+  profileUpload,
+  authController.updateProfile,
+);
 router.patch("/change-password", authenticate, authController.changePassword);
 
 // Forgot / Reset password

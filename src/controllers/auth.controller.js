@@ -1,6 +1,7 @@
 const authService = require("../services/auth.service");
 const { success } = require("../utils/response");
 const ApiError = require("../utils/ApiError");
+const { fileUrl } = require("../middleware/upload");
 
 const register = async (req, res, next) => {
   try {
@@ -8,18 +9,25 @@ const register = async (req, res, next) => {
       fullName,
       email,
       password,
-      image,
       role,
       phoneNumber,
       whatsappNumber,
       companyName,
       website,
-      companyLogo,
     } = req.body;
 
     if (!fullName || !email || !password) {
       throw new ApiError(400, "fullName, email and password are required");
     }
+
+    // Handle uploaded files
+    const image = req.files?.image?.[0]
+      ? fileUrl(req.files.image[0].filename)
+      : req.body.image || null;
+
+    const companyLogo = req.files?.companyLogo?.[0]
+      ? fileUrl(req.files.companyLogo[0].filename)
+      : req.body.companyLogo || null;
 
     const result = await authService.register({
       fullName,
@@ -174,9 +182,19 @@ const changePassword = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
   try {
+    const data = { ...req.body };
+
+    // Handle uploaded files
+    if (req.files?.image?.[0]) {
+      data.image = fileUrl(req.files.image[0].filename);
+    }
+    if (req.files?.companyLogo?.[0]) {
+      data.companyLogo = fileUrl(req.files.companyLogo[0].filename);
+    }
+
     const result = await authService.updateProfile({
       userId: req.user.id,
-      data: req.body,
+      data,
     });
     return success(res, result, "Profile updated successfully");
   } catch (err) {
