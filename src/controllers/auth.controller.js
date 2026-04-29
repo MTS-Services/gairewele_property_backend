@@ -22,11 +22,11 @@ const register = async (req, res, next) => {
 
     // Handle uploaded files
     const image = req.files?.image?.[0]
-      ? fileUrl(req.files.image[0].filename)
+      ? fileUrl("image", req.files.image[0].filename)
       : req.body.image || null;
 
     const companyLogo = req.files?.companyLogo?.[0]
-      ? fileUrl(req.files.companyLogo[0].filename)
+      ? fileUrl("companyLogo", req.files.companyLogo[0].filename)
       : req.body.companyLogo || null;
 
     const result = await authService.register({
@@ -186,10 +186,13 @@ const updateProfile = async (req, res, next) => {
 
     // Handle uploaded files
     if (req.files?.image?.[0]) {
-      data.image = fileUrl(req.files.image[0].filename);
+      data.image = fileUrl("image", req.files.image[0].filename);
     }
     if (req.files?.companyLogo?.[0]) {
-      data.companyLogo = fileUrl(req.files.companyLogo[0].filename);
+      data.companyLogo = fileUrl(
+        "companyLogo",
+        req.files.companyLogo[0].filename,
+      );
     }
 
     const result = await authService.updateProfile({
@@ -197,6 +200,15 @@ const updateProfile = async (req, res, next) => {
       data,
     });
     return success(res, result, "Profile updated successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
+const logout = async (req, res, next) => {
+  try {
+    await authService.logout({ userId: req.user.id });
+    return success(res, {}, "Logged out successfully");
   } catch (err) {
     next(err);
   }
@@ -213,4 +225,5 @@ module.exports = {
   resetPassword,
   changePassword,
   updateProfile,
+  logout,
 };

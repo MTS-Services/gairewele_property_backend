@@ -293,6 +293,14 @@ const updateProfile = async ({ userId, data }) => {
   return { user: sanitizeUser(updated) };
 };
 
+// =====================
+// Logout (authenticated)
+// =====================
+const logout = async ({ userId }) => {
+  // Delete all refresh tokens for this user (cleanup)
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+};
+
 module.exports = {
   register,
   login,
@@ -303,5 +311,6 @@ module.exports = {
   resetPassword,
   changePassword,
   updateProfile,
+  logout,
   sanitizeUser,
 };

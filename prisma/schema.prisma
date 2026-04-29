@@ -92,9 +92,7 @@ enum BlogCategory {
   ARCHITECTURE
 }
 
-// =====================
-// Auth / User
-// =====================
+
 model User {
   id              String        @id @default(uuid())
   fullName        String

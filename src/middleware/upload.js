@@ -4,14 +4,20 @@ const crypto = require("crypto");
 const fs = require("fs");
 
 const UPLOAD_DIR = path.join(__dirname, "../../uploads");
+const IMAGE_DIR = path.join(UPLOAD_DIR, "image");
+const LOGO_DIR = path.join(UPLOAD_DIR, "companyLogo");
 
-// Ensure uploads directory exists
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+// Ensure subdirectories exist
+[UPLOAD_DIR, IMAGE_DIR, LOGO_DIR].forEach((dir) => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
 
+// Destination: image → uploads/image/, companyLogo → uploads/companyLogo/
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  destination: (_req, file, cb) => {
+    const dir = file.fieldname === "companyLogo" ? LOGO_DIR : IMAGE_DIR;
+    cb(null, dir);
+  },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const unique = crypto.randomBytes(16).toString("hex");
@@ -37,17 +43,12 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
 
-/**
- * Build the public URL for an uploaded file.
- * @param {string} filename
- * @returns {string}
- */
-const fileUrl = (filename) => {
+const fileUrl = (subfolder, filename) => {
   const base = (process.env.BASE_URL || "http://localhost:3000").replace(
     /\/$/,
     "",
   );
-  return `${base}/uploads/${filename}`;
+  return `${base}/uploads/${subfolder}/${filename}`;
 };
 
 module.exports = { upload, fileUrl };

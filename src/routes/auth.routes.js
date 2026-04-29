@@ -13,6 +13,7 @@ router.post("/register", profileUpload, authController.register);
 router.post("/login", authController.login);
 router.post("/firebase-login", authController.firebaseLogin);
 router.get("/me", authenticate, authController.me);
+router.post("/logout", authenticate, authController.logout);
 
 // Profile
 router.patch(
