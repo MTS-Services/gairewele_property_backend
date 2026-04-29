@@ -124,8 +124,7 @@ model User {
   ads               Advertisement[]     @relation("AdCreator")
   sentMessages      Message[]           @relation("MessageSender")
   receivedMessages  Message[]           @relation("MessageReceiver")
-  conversations1    Conversation[]      @relation("ConversationUser1")
-  conversations2    Conversation[]      @relation("ConversationUser2")
+  conversationParticipants ConversationParticipant[]
   refreshTokens     RefreshToken[]
 }
 
@@ -272,16 +271,23 @@ model Blog {
 
 
 model Conversation {
-  id        String    @id @default(uuid())
-  user1Id   String
-  user2Id   String
-  user1     User      @relation("ConversationUser1", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2     User      @relation("ConversationUser2", fields: [user2Id], references: [id], onDelete: Cascade)
-  messages  Message[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String                    @id @default(uuid())
+  participants ConversationParticipant[]
+  messages     Message[]
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+}
 
-  @@unique([user1Id, user2Id])
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
 }
 
 model Message {
@@ -293,7 +299,8 @@ model Message {
   sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   receiver       User         @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   content        String?
-  attachmentUrl  String?
+  mediaUrl       String?
+  mediaType      String?      // "image" | "video" | "file"
   isRead         Boolean      @default(false)
   createdAt      DateTime     @default(now())
 
