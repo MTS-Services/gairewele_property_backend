@@ -3,10 +3,27 @@ const ApiError = require("../utils/ApiError");
 
 const ALLOWED_ROLES = ["AGENT", "DEVELOPER", "OWNER"];
 
+// Reusable include for property with images + owner
+const PROPERTY_INCLUDE = {
+  images: { orderBy: { createdAt: "asc" } },
+  owner: {
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      companyName: true,
+      image: true,
+      phoneNumber: true,
+      whatsappNumber: true,
+    },
+  },
+};
+
 // ─────────────────────────────────────────────────────────────────
 // Create a new property listing (role: AGENT / DEVELOPER / OWNER)
 // ─────────────────────────────────────────────────────────────────
-const createProperty = async ({ ownerId, ownerRole, data }) => {
+const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
   if (!ALLOWED_ROLES.includes(ownerRole)) {
     throw new ApiError(
       403,
@@ -23,7 +40,6 @@ const createProperty = async ({ ownerId, ownerRole, data }) => {
     listingType,
     location,
     propertyAddress,
-    gallery, // array of URLs
     videoUrl,
     askingPrice,
     whatsappNumber,
@@ -100,7 +116,6 @@ const createProperty = async ({ ownerId, ownerRole, data }) => {
       listingType,
       location,
       propertyAddress,
-      gallery: gallery || [],
       videoUrl: videoUrl || null,
       askingPrice,
       whatsappNumber: whatsappNumber || null,
@@ -109,31 +124,21 @@ const createProperty = async ({ ownerId, ownerRole, data }) => {
       phoneNumber: phoneNumber || null,
       approvalStatus: "PENDING",
       ownerId,
-    },
-    include: {
-      owner: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          role: true,
-          companyName: true,
-          image: true,
-        },
+      images: {
+        create: imageUrls.map((url) => ({ url })),
       },
     },
+    include: PROPERTY_INCLUDE,
   });
 
   return property;
 };
 
 // ─────────────────────────────────────────────────────────────────
-// Update a property (owner only, only if PENDING or REJECTED)
+// Update a property (owner only)
 // ─────────────────────────────────────────────────────────────────
-const updateProperty = async ({ propertyId, ownerId, data }) => {
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
-  });
+const updateProperty = async ({ propertyId, ownerId, data, imageUrls = [] }) => {
+  const property = await prisma.property.findUnique({ where: { id: propertyId } });
   if (!property) throw new ApiError(404, "Property not found");
   if (property.ownerId !== ownerId)
     throw new ApiError(403, "You can only edit your own properties");
@@ -160,17 +165,34 @@ const updateProperty = async ({ propertyId, ownerId, data }) => {
     if (data[key] !== undefined) updateData[key] = data[key];
   }
   if (data.listingType) updateData.propertyTitle = data.listingType;
-  // Re-submit for review after edit
   updateData.approvalStatus = "PENDING";
+
+  // Append new images — existing PropertyImage rows are untouched
+  if (imageUrls.length > 0) {
+    updateData.images = { create: imageUrls.map((url) => ({ url })) };
+  }
 
   const updated = await prisma.property.update({
     where: { id: propertyId },
     data: updateData,
-    include: {
-      owner: { select: { id: true, fullName: true, email: true, role: true } },
-    },
+    include: PROPERTY_INCLUDE,
   });
   return updated;
+};
+
+// ─────────────────────────────────────────────────────────────────
+// Delete a single gallery image by its ID (owner only)
+// ─────────────────────────────────────────────────────────────────
+const deletePropertyImage = async ({ imageId, ownerId }) => {
+  const image = await prisma.propertyImage.findUnique({
+    where: { id: imageId },
+    include: { property: { select: { ownerId: true } } },
+  });
+  if (!image) throw new ApiError(404, "Image not found");
+  if (image.property.ownerId !== ownerId)
+    throw new ApiError(403, "You can only delete images from your own properties");
+
+  await prisma.propertyImage.delete({ where: { id: imageId } });
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -203,6 +225,7 @@ const getMyProperties = async ({ ownerId, status, page = 1 }) => {
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
+      include: PROPERTY_INCLUDE,
     }),
     prisma.property.count({ where }),
   ]);
@@ -219,27 +242,13 @@ const getMyProperties = async ({ ownerId, status, page = 1 }) => {
 const getPropertyById = async ({ propertyId, userId, userRole }) => {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
-    include: {
-      owner: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          role: true,
-          companyName: true,
-          image: true,
-          phoneNumber: true,
-          whatsappNumber: true,
-        },
-      },
-    },
+    include: PROPERTY_INCLUDE,
   });
   if (!property) throw new ApiError(404, "Property not found");
 
   if (userRole === "ADMIN") return property;
   if (property.ownerId === userId) return property;
-  if (["PUBLISHED", "FEATURED"].includes(property.approvalStatus))
-    return property;
+  if (["PUBLISHED", "FEATURED"].includes(property.approvalStatus)) return property;
 
   throw new ApiError(404, "Property not found");
 };
@@ -264,7 +273,6 @@ const getPublicProperties = async ({ filters = {}, page = 1 }) => {
     if (filters.maxPrice) where.askingPrice.lte = parseFloat(filters.maxPrice);
   }
 
-  // Featured properties appear first
   const [properties, total] = await Promise.all([
     prisma.property.findMany({
       where,
@@ -275,15 +283,8 @@ const getPublicProperties = async ({ filters = {}, page = 1 }) => {
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: {
-        owner: {
-          select: {
-            id: true,
-            fullName: true,
-            role: true,
-            companyName: true,
-            image: true,
-          },
-        },
+        images: { orderBy: { createdAt: "asc" } },
+        owner: { select: { id: true, fullName: true, role: true, companyName: true, image: true } },
       },
     }),
     prisma.property.count({ where }),
@@ -292,9 +293,9 @@ const getPublicProperties = async ({ filters = {}, page = 1 }) => {
   return { properties, total, page };
 };
 
-// ─────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────
 // Admin: Get ALL properties with optional status filter
-// ─────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────
 const adminGetAllProperties = async ({ status, page = 1 }) => {
   const PAGE_SIZE = 10;
   const where = {};
@@ -307,15 +308,8 @@ const adminGetAllProperties = async ({ status, page = 1 }) => {
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: {
-        owner: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            companyName: true,
-          },
-        },
+        images: { orderBy: { createdAt: "asc" } },
+        owner: { select: { id: true, fullName: true, email: true, role: true, companyName: true } },
       },
     }),
     prisma.property.count({ where }),
@@ -327,26 +321,18 @@ const adminGetAllProperties = async ({ status, page = 1 }) => {
 // ─────────────────────────────────────────────────────────────────
 // Admin: Approve / Reject / Feature a property
 // ─────────────────────────────────────────────────────────────────
-const updateApprovalStatus = async ({ propertyId, status, adminId }) => {
+const updateApprovalStatus = async ({ propertyId, status }) => {
   const validStatuses = ["PENDING", "PUBLISHED", "REJECTED", "FEATURED"];
-  if (!validStatuses.includes(status)) {
-    throw new ApiError(
-      400,
-      `Invalid status. Valid values: ${validStatuses.join(", ")}`,
-    );
-  }
+  if (!validStatuses.includes(status))
+    throw new ApiError(400, `Invalid status. Valid values: ${validStatuses.join(", ")}`);
 
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
-  });
+  const property = await prisma.property.findUnique({ where: { id: propertyId } });
   if (!property) throw new ApiError(404, "Property not found");
 
   const updated = await prisma.property.update({
     where: { id: propertyId },
     data: { approvalStatus: status },
-    include: {
-      owner: { select: { id: true, fullName: true, email: true, role: true } },
-    },
+    include: PROPERTY_INCLUDE,
   });
   return updated;
 };
@@ -354,6 +340,7 @@ const updateApprovalStatus = async ({ propertyId, status, adminId }) => {
 module.exports = {
   createProperty,
   updateProperty,
+  deletePropertyImage,
   deleteProperty,
   getMyProperties,
   getPropertyById,

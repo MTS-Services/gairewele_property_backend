@@ -361,6 +361,11 @@ Content-Type: `application/json`
 | `FEATURED`     | Feature (top placement)  |
 | `PENDING`      | Reset to pending         |
 
+
+
+9.  {{baseUrl}}/api/properties/{{propertyId}}/gallery/{{imageId}}
+
+
 **cURL Examples:**
 
 Approve:

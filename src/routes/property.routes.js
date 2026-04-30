@@ -6,6 +6,7 @@ const { galleryUpload } = require("../middleware/propertyUpload");
 const {
   createProperty,
   updateProperty,
+  deletePropertyImage,
   deleteProperty,
   getMyProperties,
   getPropertyById,
@@ -64,6 +65,14 @@ router.patch(
   authorize("AGENT", "DEVELOPER", "OWNER"),
   upload,
   updateProperty,
+);
+
+// DELETE /api/properties/:id/gallery/:imageId  — delete one image by UUID (owner)
+router.delete(
+  "/:id/gallery/:imageId",
+  authenticate,
+  authorize("AGENT", "DEVELOPER", "OWNER"),
+  deletePropertyImage,
 );
 
 // DELETE /api/properties/:id  — delete (owner or admin)

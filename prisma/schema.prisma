@@ -190,7 +190,7 @@ model Property {
   location        String
   propertyAddress String
 
-  gallery         String[]
+  images          PropertyImage[]
   videoUrl        String?
 
   askingPrice     Decimal                @db.Decimal(15, 2)
@@ -207,6 +207,16 @@ model Property {
 
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
+}
+
+model PropertyImage {
+  id          String   @id @default(uuid())
+  url         String
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([propertyId])
 }
 
 

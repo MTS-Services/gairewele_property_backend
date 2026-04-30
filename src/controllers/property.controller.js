@@ -7,30 +7,13 @@ const { galleryFileUrl } = require("../middleware/propertyUpload");
 // Create a property listing (AGENT / DEVELOPER / OWNER)
 const createProperty = async (req, res, next) => {
   try {
-    // Handle gallery image uploads
-    const galleryUrls = (req.files || []).map((f) =>
-      galleryFileUrl(f.filename),
-    );
-
-    // Also accept pre-uploaded URLs passed as JSON array in body
-    let extraGallery = [];
-    if (req.body.gallery) {
-      try {
-        extraGallery = Array.isArray(req.body.gallery)
-          ? req.body.gallery
-          : JSON.parse(req.body.gallery);
-      } catch {
-        extraGallery = [req.body.gallery];
-      }
-    }
+    const imageUrls = (req.files || []).map((f) => galleryFileUrl(f.filename));
 
     const property = await propertyService.createProperty({
       ownerId: req.user.id,
       ownerRole: req.user.role,
-      data: {
-        ...req.body,
-        gallery: [...galleryUrls, ...extraGallery],
-      },
+      data: req.body,
+      imageUrls,
     });
 
     return success(res, property, "Property submitted for approval", 201);
@@ -40,39 +23,36 @@ const createProperty = async (req, res, next) => {
 };
 
 // PATCH /api/properties/:id
-// Update own property (owner only)
+// Update own property — new images are APPENDED, existing images untouched
 const updateProperty = async (req, res, next) => {
   try {
-    const galleryUrls = (req.files || []).map((f) =>
-      galleryFileUrl(f.filename),
-    );
-
-    let extraGallery = [];
-    if (req.body.gallery) {
-      try {
-        extraGallery = Array.isArray(req.body.gallery)
-          ? req.body.gallery
-          : JSON.parse(req.body.gallery);
-      } catch {
-        extraGallery = [req.body.gallery];
-      }
-    }
-
-    const data = { ...req.body };
-    if (galleryUrls.length > 0 || extraGallery.length > 0) {
-      data.gallery = [...galleryUrls, ...extraGallery];
-    }
+    const imageUrls = (req.files || []).map((f) => galleryFileUrl(f.filename));
 
     const property = await propertyService.updateProperty({
       propertyId: req.params.id,
       ownerId: req.user.id,
-      data,
+      data: req.body,
+      imageUrls,
     });
     return success(
       res,
       property,
       "Property updated and re-submitted for approval",
     );
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/properties/:id/gallery/:imageId
+// Delete a single gallery image by its UUID (owner only)
+const deletePropertyImage = async (req, res, next) => {
+  try {
+    await propertyService.deletePropertyImage({
+      imageId: req.params.imageId,
+      ownerId: req.user.id,
+    });
+    return success(res, {}, "Image deleted successfully");
   } catch (err) {
     next(err);
   }
@@ -196,6 +176,7 @@ const updateApprovalStatus = async (req, res, next) => {
 module.exports = {
   createProperty,
   updateProperty,
+  deletePropertyImage,
   deleteProperty,
   getMyProperties,
   getPropertyById,
