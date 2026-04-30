@@ -115,6 +115,8 @@ const firebaseLogin = async ({ idToken, role, fullName, image }) => {
     });
   }
 
+  if (user.isSuspended) throw new ApiError(403, "Account suspended");
+
   const token = signToken({ id: user.id, role: user.role });
   return { user: sanitizeUser(user), token };
 };
