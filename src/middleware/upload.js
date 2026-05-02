@@ -7,12 +7,11 @@ const UPLOAD_DIR = path.join(__dirname, "../../uploads");
 const IMAGE_DIR = path.join(UPLOAD_DIR, "image");
 const LOGO_DIR = path.join(UPLOAD_DIR, "companyLogo");
 
-// Ensure subdirectories exist
 [UPLOAD_DIR, IMAGE_DIR, LOGO_DIR].forEach((dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// Destination: image → uploads/image/, companyLogo → uploads/companyLogo/
+
 const storage = multer.diskStorage({
   destination: (_req, file, cb) => {
     const dir = file.fieldname === "companyLogo" ? LOGO_DIR : IMAGE_DIR;
@@ -40,7 +39,7 @@ const fileFilter = (_req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 }, 
 });
 
 const fileUrl = (subfolder, filename) => {

@@ -27,7 +27,7 @@ const fileFilter = (_req, file, cb) => {
   );
 };
 
-// Up to 20 gallery photos, 10 MB each
+
 const galleryUpload = multer({
   storage,
   fileFilter,

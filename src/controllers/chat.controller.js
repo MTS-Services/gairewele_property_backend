@@ -7,8 +7,6 @@ const {
 } = require("../middleware/chatUpload");
 const { emitToUser } = require("../socket");
 
-// POST /api/chat/conversations
-// Start or retrieve an existing 1-on-1 conversation with receiverId
 const startOrGetConversation = async (req, res, next) => {
   try {
     const { receiverId } = req.body;
@@ -29,8 +27,7 @@ const startOrGetConversation = async (req, res, next) => {
   }
 };
 
-// GET /api/chat/conversations
-// Return inbox (all conversations for authenticated user)
+
 const getConversations = async (req, res, next) => {
   try {
     const data = await chatService.getConversations(req.user.id);
@@ -40,8 +37,7 @@ const getConversations = async (req, res, next) => {
   }
 };
 
-// GET /api/chat/conversations/:id
-// All messages — also auto-marks incoming as read
+
 const getConversationMessages = async (req, res, next) => {
   try {
     const { id: conversationId } = req.params;
@@ -55,14 +51,13 @@ const getConversationMessages = async (req, res, next) => {
   }
 };
 
-// POST /api/chat/conversations/:id
-// Send a message (text and/or mediaUrl) in an existing conversation
+
 const sendMessage = async (req, res, next) => {
   try {
     const { id: conversationId } = req.params;
     const { content, mediaUrl, mediaType } = req.body;
 
-    // If a file was uploaded directly via this endpoint, use it
+
     const resolvedMediaUrl = req.file
       ? chatFileUrl(req.file.filename)
       : mediaUrl || null;
@@ -88,8 +83,7 @@ const sendMessage = async (req, res, next) => {
   }
 };
 
-// POST /api/chat/upload
-// Upload a file/image/video → returns public URL + type to use in sendMessage
+
 const uploadMedia = async (req, res, next) => {
   try {
     if (!req.file) throw new ApiError(400, "No file uploaded");
@@ -110,8 +104,7 @@ const uploadMedia = async (req, res, next) => {
   }
 };
 
-// PUT /api/chat/conversations/:id/read
-// Explicitly mark all incoming messages in a conversation as read
+
 const markAsRead = async (req, res, next) => {
   try {
     const { id: conversationId } = req.params;

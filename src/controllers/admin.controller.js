@@ -17,7 +17,6 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/users/:id
 const getUserById = async (req, res, next) => {
   try {
     const data = await adminService.getUserById({ userId: req.params.id });
@@ -27,7 +26,6 @@ const getUserById = async (req, res, next) => {
   }
 };
 
-// PATCH /api/admin/users/:id/toggle-suspend
 const toggleSuspendUser = async (req, res, next) => {
   try {
     const data = await adminService.toggleSuspendUser({
@@ -44,7 +42,6 @@ const toggleSuspendUser = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/listings
 const getAllListings = async (req, res, next) => {
   try {
     const { ownerRole, approvalStatus, search, page, pageSize } = req.query;

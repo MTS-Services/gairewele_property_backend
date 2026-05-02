@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// Allow images, videos, common documents
+
 const ALLOWED_MIME =
   /^(image\/(jpeg|jpg|png|gif|webp|avif)|video\/(mp4|webm|ogg|quicktime|x-matroska)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet|presentationml\.presentation)|vnd\.ms-excel|vnd\.ms-powerpoint|zip|x-zip-compressed)|text\/plain)$/;
 
@@ -29,7 +29,7 @@ const fileFilter = (_req, file, cb) => {
 const chatUpload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+  limits: { fileSize: 50 * 1024 * 1024 }, 
 });
 
 const detectAttachmentType = (mimetype = "") => {

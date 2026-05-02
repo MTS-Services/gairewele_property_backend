@@ -3,8 +3,6 @@ const { success } = require("../utils/response");
 const ApiError = require("../utils/ApiError");
 const { galleryFileUrl } = require("../middleware/propertyUpload");
 
-// POST /api/properties
-// Create a property listing (AGENT / DEVELOPER / OWNER)
 const createProperty = async (req, res, next) => {
   try {
     const imageUrls = (req.files || []).map((f) => galleryFileUrl(f.filename));
@@ -22,8 +20,7 @@ const createProperty = async (req, res, next) => {
   }
 };
 
-// PATCH /api/properties/:id
-// Update own property — new images are APPENDED, existing images untouched
+
 const updateProperty = async (req, res, next) => {
   try {
     const imageUrls = (req.files || []).map((f) => galleryFileUrl(f.filename));
@@ -44,8 +41,7 @@ const updateProperty = async (req, res, next) => {
   }
 };
 
-// DELETE /api/properties/:id/gallery/:imageId
-// Delete a single gallery image by its UUID (owner only)
+
 const deletePropertyImage = async (req, res, next) => {
   try {
     await propertyService.deletePropertyImage({
@@ -58,8 +54,7 @@ const deletePropertyImage = async (req, res, next) => {
   }
 };
 
-// DELETE /api/properties/:id
-// Delete own property (owner) or any property (admin)
+
 const deleteProperty = async (req, res, next) => {
   try {
     await propertyService.deleteProperty({
@@ -73,8 +68,7 @@ const deleteProperty = async (req, res, next) => {
   }
 };
 
-// GET /api/properties/my
-// My own property listings (owner)
+
 const getMyProperties = async (req, res, next) => {
   try {
     const { status, page } = req.query;
@@ -89,8 +83,7 @@ const getMyProperties = async (req, res, next) => {
   }
 };
 
-// GET /api/properties/:id
-// Single property detail
+
 const getPropertyById = async (req, res, next) => {
   try {
     const property = await propertyService.getPropertyById({
@@ -104,8 +97,7 @@ const getPropertyById = async (req, res, next) => {
   }
 };
 
-// GET /api/properties
-// Public listing (PUBLISHED + FEATURED) — supports filters
+
 const getPublicProperties = async (req, res, next) => {
   try {
     const {
@@ -136,8 +128,7 @@ const getPublicProperties = async (req, res, next) => {
 
 // ─── ADMIN ONLY ───────────────────────────────────────────────────
 
-// GET /api/properties/admin/all
-// All properties (admin)
+
 const adminGetAllProperties = async (req, res, next) => {
   try {
     const { status, page } = req.query;
@@ -151,8 +142,7 @@ const adminGetAllProperties = async (req, res, next) => {
   }
 };
 
-// PATCH /api/properties/admin/:id/status
-// Approve / Reject / Feature a property (admin)
+
 const updateApprovalStatus = async (req, res, next) => {
   try {
     const { status } = req.body;

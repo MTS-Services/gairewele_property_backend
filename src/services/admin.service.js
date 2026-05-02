@@ -10,8 +10,6 @@ const sanitizeUser = (user) => {
 };
 
 
-// Get all users with role filter, search, pagination
-// + counts grouped by role (so admin can see "USER: 50, AGENT: 12, ...")
 const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
   // Exclude ADMIN accounts from the listing
   const NON_ADMIN_ROLES = VALID_ROLES.filter((r) => r !== "ADMIN");
@@ -51,7 +49,6 @@ const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
     }),
   ]);
 
-  // Build per-role counts (excludes ADMIN)
   const countsByRole = NON_ADMIN_ROLES.reduce((acc, r) => {
     acc[r] = 0;
     return acc;
@@ -67,7 +64,7 @@ const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
   };
 };
 
-// Get a single user by id with their listing count
+
 const getUserById = async ({ userId }) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -99,9 +96,6 @@ const toggleSuspendUser = async ({ userId, adminId }) => {
   };
 };
 
-// ─────────────────────────────────────────────────────────────────
-// LISTINGS (properties) — admin overview
-// ─────────────────────────────────────────────────────────────────
 
 const PROPERTY_INCLUDE_ADMIN = {
   images: { orderBy: { createdAt: "asc" } },
@@ -118,9 +112,9 @@ const PROPERTY_INCLUDE_ADMIN = {
 };
 
 const getAllListings = async ({
-  ownerRole, // filter by creator's role
-  approvalStatus, // filter by listing status
-  search, // by title / location
+  ownerRole, 
+  approvalStatus, 
+  search, 
   page = 1,
   pageSize = 20,
 }) => {
@@ -175,7 +169,7 @@ const getAllListings = async ({
       }),
     ]);
 
-  // countsByCreatorRole: { AGENT: 30, DEVELOPER: 12, OWNER: 8 }
+ 
   const countsByCreatorRole = { AGENT: 0, DEVELOPER: 0, OWNER: 0 };
   for (const u of listingsByCreatorRole) {
     countsByCreatorRole[u.role] =

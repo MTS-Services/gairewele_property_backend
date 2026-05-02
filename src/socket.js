@@ -39,7 +39,7 @@ const init = (httpServer) => {
     const { user } = socket;
     socket.join(userRoom(user.id));
 
-    // Notify others (optional presence indicator)
+
     socket.broadcast.emit("presence:online", { userId: user.id });
 
     // Typing indicator: { receiverId, isTyping }
@@ -51,7 +51,7 @@ const init = (httpServer) => {
       });
     });
 
-    // Manual join of a conversation room (optional, for multi-device sync)
+  
     socket.on("conversation:join", ({ conversationId }) => {
       if (conversationId) socket.join(`conversation:${conversationId}`);
     });
