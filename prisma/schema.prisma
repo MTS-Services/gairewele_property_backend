@@ -245,6 +245,10 @@ model Advertisement {
   startDate   DateTime
   endDate     DateTime
 
+  impressions Int         @default(0)
+  clicks      Int         @default(0)
+  isPaused    Boolean     @default(false)
+
   createdById String?
   createdBy   User?       @relation("AdCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
