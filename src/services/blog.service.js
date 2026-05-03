@@ -236,12 +236,10 @@ const updateBlog = async ({
     }
   }
 
-  // Append new images (keep existing)
+  // Replace all images — delete old files from disk, set new ones
   if (imageFiles && imageFiles.length > 0) {
-    data.images = [
-      ...blog.images,
-      ...imageFiles.map((f) => blogImageUrl(f.filename)),
-    ];
+    blog.images.forEach((url) => removeFile(url, "blog"));
+    data.images = imageFiles.map((f) => blogImageUrl(f.filename));
   }
 
   // Replace PDF if new one uploaded
