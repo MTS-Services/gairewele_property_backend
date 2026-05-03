@@ -86,7 +86,6 @@ const updateAd = async (req, res, next) => {
   }
 };
 
-// DELETE /api/admin/ads/:id
 const deleteAd = async (req, res, next) => {
   try {
     const data = await adService.deleteAd({ adId: req.params.id });
@@ -96,7 +95,6 @@ const deleteAd = async (req, res, next) => {
   }
 };
 
-// PUBLIC: GET /api/ads/:placement
 const getAdsByPlacement = async (req, res, next) => {
   try {
     const { placement } = req.params;
@@ -125,7 +123,6 @@ const trackAd = async (req, res, next) => {
   }
 };
 
-// ADMIN: PATCH /api/admin/ads/:id/toggle-pause
 const togglePauseAd = async (req, res, next) => {
   try {
     const data = await adService.togglePauseAd({ adId: req.params.id });
@@ -139,7 +136,6 @@ const togglePauseAd = async (req, res, next) => {
   }
 };
 
-// ADMIN: GET /api/admin/ads/stats
 const getAdStats = async (req, res, next) => {
   try {
     const data = await adService.getAdStats();

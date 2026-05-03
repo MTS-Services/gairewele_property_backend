@@ -248,11 +248,7 @@ const deleteAd = async ({ adId }) => {
   return { id: adId };
 };
 
-// ─────────────────────────────────────────────────────────────────
-// PUBLIC OPERATIONS — fetch ads to render on each portion
-// ─────────────────────────────────────────────────────────────────
 
-// Returns currently-live ads for a given placement (HOMEPAGE / BLOG / PROPERTIES / REGISTER).
 // Ordered by status priority: SPONSOR > FEATURED > STANDARD, then newest first.
 const getAdsByPlacement = async ({ placement, limit = 10 }) => {
   if (!VALID_PLACEMENTS.includes(placement))
@@ -277,9 +273,6 @@ const getAdsByPlacement = async ({ placement, limit = 10 }) => {
   return ads;
 };
 
-// ─────────────────────────────────────────────────────────────────
-// TRACKING — impression / click
-// ─────────────────────────────────────────────────────────────────
 
 const trackAd = async ({ adId, type }) => {
   if (!adId) throw new ApiError(400, "Ad id is required");
@@ -301,9 +294,6 @@ const trackAd = async ({ adId, type }) => {
   return updated;
 };
 
-// ─────────────────────────────────────────────────────────────────
-// PAUSE TOGGLE — admin pauses/unpauses without deleting
-// ─────────────────────────────────────────────────────────────────
 
 const togglePauseAd = async ({ adId }) => {
   const ad = await prisma.advertisement.findUnique({ where: { id: adId } });

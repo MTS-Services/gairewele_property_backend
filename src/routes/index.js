@@ -5,6 +5,7 @@ const propertyRoutes = require("./property.routes");
 const adminRoutes = require("./admin.routes");
 const adRoutes = require("./ad.routes");
 const publicAdRoutes = require("./publicAd.routes");
+const blogRoutes = require("./blog.routes");
 
 router.get("/health", (req, res) => res.json({ status: "ok" }));
 router.use("/auth", authRoutes);
@@ -13,5 +14,6 @@ router.use("/properties", propertyRoutes);
 router.use("/admin", adminRoutes);
 router.use("/admin/ads", adRoutes);
 router.use("/ads", publicAdRoutes);
+router.use("/", blogRoutes);
 
 module.exports = router;

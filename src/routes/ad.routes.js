@@ -11,7 +11,7 @@ const {
   getAdStats,
 } = require("../controllers/ad.controller");
 
-// All routes here are admin-only (mounted under /api/admin/ads)
+
 router.use(authenticate, authorize("ADMIN"));
 
 router.get("/stats", getAdStats);

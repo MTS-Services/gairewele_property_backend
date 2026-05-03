@@ -87,9 +87,20 @@ enum AdStatus {
 }
 
 enum BlogCategory {
-  PROPERTY_NEWS
-  MARKET_INTELLIGENCE
-  ARCHITECTURE
+  BUY
+  RENT
+  INVEST
+  MARKET_NEWS
+  GUIDES
+  DESIGN_LIFESTYLE
+  LEGAL
+  COMMERCIAL
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
 
 
@@ -277,7 +288,8 @@ model Blog {
   publishDate     DateTime?
   excerpt         String?
 
-  isPublished     Boolean      @default(false)
+  status          BlogStatus   @default(DRAFT)
+  views           Int          @default(0)
 
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
