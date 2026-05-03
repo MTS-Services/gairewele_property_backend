@@ -398,8 +398,9 @@ const getBlogStats = async () => {
       _sum: { views: true },
       _count: { _all: true },
     }),
-    prisma.blog.findFirst({
+    prisma.blog.findMany({
       orderBy: { views: "desc" },
+      take: 3,
       select: { id: true, title: true, views: true, urlSlug: true },
     }),
     prisma.blog.groupBy({
