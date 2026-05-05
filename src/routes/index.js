@@ -20,6 +20,6 @@ router.use("/ads", publicAdRoutes);
 router.use("/", blogRoutes);
 router.use("/property-requests", propertyRequestRoutes);
 router.use("/saved-listings", savedListingRoutes);
-router.use("/user", userRoutes);
+router.use("/", userRoutes);
 
 module.exports = router;
