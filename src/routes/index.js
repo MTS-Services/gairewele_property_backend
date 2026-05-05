@@ -7,6 +7,8 @@ const adRoutes = require("./ad.routes");
 const publicAdRoutes = require("./publicAd.routes");
 const blogRoutes = require("./blog.routes");
 const propertyRequestRoutes = require("./propertyRequest.routes");
+const savedListingRoutes = require("./savedListing.routes");
+const userRoutes = require("./dashboard.routes");
 
 router.get("/health", (req, res) => res.json({ status: "ok" }));
 router.use("/auth", authRoutes);
@@ -17,5 +19,7 @@ router.use("/admin/ads", adRoutes);
 router.use("/ads", publicAdRoutes);
 router.use("/", blogRoutes);
 router.use("/property-requests", propertyRequestRoutes);
+router.use("/saved-listings", savedListingRoutes);
+router.use("/user", userRoutes);
 
 module.exports = router;
