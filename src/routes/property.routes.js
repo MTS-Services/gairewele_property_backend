@@ -11,6 +11,7 @@ const {
   getMyProperties,
   getPropertyById,
   getPublicProperties,
+  getLocationSuggestions,
   adminGetAllProperties,
   updateApprovalStatus,
 } = require("../controllers/property.controller");
@@ -22,6 +23,9 @@ const upload = (req, res, next) => {
     next();
   });
 };
+
+// GET /api/properties/location-suggestions  — Google Places autocomplete (public)
+router.get("/location-suggestions", getLocationSuggestions);
 
 // ─── Admin routes (must be before /:id to avoid param conflicts) ─
 // GET  /api/properties/admin/all

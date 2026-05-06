@@ -7,9 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// =====================
-// Enums
-// =====================
+
 enum Role {
   USER
   ADMIN
@@ -127,7 +125,6 @@ model User {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  // Relations
   properties        Property[]          @relation("PropertyOwner")
   propertyRequests  PropertyRequest[]
   subscription      Subscription?

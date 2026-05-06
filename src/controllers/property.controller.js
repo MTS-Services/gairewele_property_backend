@@ -20,7 +20,6 @@ const createProperty = async (req, res, next) => {
   }
 };
 
-
 const updateProperty = async (req, res, next) => {
   try {
     const imageUrls = (req.files || []).map((f) => galleryFileUrl(f.filename));
@@ -41,7 +40,6 @@ const updateProperty = async (req, res, next) => {
   }
 };
 
-
 const deletePropertyImage = async (req, res, next) => {
   try {
     await propertyService.deletePropertyImage({
@@ -53,7 +51,6 @@ const deletePropertyImage = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const deleteProperty = async (req, res, next) => {
   try {
@@ -67,7 +64,6 @@ const deleteProperty = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const getMyProperties = async (req, res, next) => {
   try {
@@ -83,7 +79,6 @@ const getMyProperties = async (req, res, next) => {
   }
 };
 
-
 const getPropertyById = async (req, res, next) => {
   try {
     const property = await propertyService.getPropertyById({
@@ -97,28 +92,76 @@ const getPropertyById = async (req, res, next) => {
   }
 };
 
+const https = require("https");
+
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+
+// Resolve a place name to a short human-readable city/area string via Google Geocoding.
+// Falls back to the raw input if the API call fails.
+const resolveLocation = (input) =>
+  new Promise((resolve) => {
+    if (!input) return resolve(null);
+    const encoded = encodeURIComponent(input);
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encoded}&key=${GOOGLE_API_KEY}`;
+    https
+      .get(url, (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          try {
+            const json = JSON.parse(data);
+            if (json.status === "OK" && json.results.length > 0) {
+              // Use locality or administrative_area_level_1 as short name
+              const components = json.results[0].address_components;
+              const locality = components.find((c) =>
+                c.types.includes("locality"),
+              );
+              const area = components.find((c) =>
+                c.types.includes("administrative_area_level_1"),
+              );
+              resolve((locality || area)?.long_name || input);
+            } else {
+              resolve(input);
+            }
+          } catch {
+            resolve(input);
+          }
+        });
+      })
+      .on("error", () => resolve(input));
+  });
 
 const getPublicProperties = async (req, res, next) => {
   try {
     const {
+      search,
       propertyType,
       listingType,
       condition,
       location,
       minPrice,
       maxPrice,
+      bedrooms,
       page,
+      pageSize,
     } = req.query;
+
+    // Resolve location string via Google Geocoding if provided
+    const resolvedLocation = await resolveLocation(location);
+
     const data = await propertyService.getPublicProperties({
       filters: {
-        propertyType,
-        listingType,
-        condition,
-        location,
-        minPrice,
-        maxPrice,
+        search: search || null,
+        propertyType: propertyType ? propertyType.toUpperCase() : null,
+        listingType: listingType ? listingType.toUpperCase() : null,
+        condition: condition ? condition.toUpperCase() : null,
+        location: resolvedLocation,
+        minPrice: minPrice || null,
+        maxPrice: maxPrice || null,
+        bedrooms: bedrooms || null,
       },
       page: parseInt(page, 10) || 1,
+      pageSize: parseInt(pageSize, 10) || 10,
     });
     return success(res, data, "Properties fetched");
   } catch (err) {
@@ -127,7 +170,6 @@ const getPublicProperties = async (req, res, next) => {
 };
 
 // ─── ADMIN ONLY ───────────────────────────────────────────────────
-
 
 const adminGetAllProperties = async (req, res, next) => {
   try {
@@ -141,7 +183,6 @@ const adminGetAllProperties = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const updateApprovalStatus = async (req, res, next) => {
   try {
@@ -163,6 +204,47 @@ const updateApprovalStatus = async (req, res, next) => {
   }
 };
 
+// GET /api/properties/location-suggestions?input=Lekki
+// Returns place suggestions from Google Places Autocomplete
+const getLocationSuggestions = async (req, res, next) => {
+  try {
+    const { input } = req.query;
+    if (!input || input.trim().length < 2) {
+      return success(res, { suggestions: [] }, "No input provided");
+    }
+
+    const encoded = encodeURIComponent(input.trim());
+    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encoded}&types=(cities)&key=${process.env.GOOGLE_API_KEY}`;
+
+    const data = await new Promise((resolve, reject) => {
+      https
+        .get(url, (apiRes) => {
+          let body = "";
+          apiRes.on("data", (chunk) => (body += chunk));
+          apiRes.on("end", () => {
+            try {
+              resolve(JSON.parse(body));
+            } catch {
+              reject(new Error("Failed to parse Google response"));
+            }
+          });
+        })
+        .on("error", reject);
+    });
+
+    const suggestions = (data.predictions || []).map((p) => ({
+      placeId: p.place_id,
+      description: p.description,
+      mainText: p.structured_formatting?.main_text || p.description,
+      secondaryText: p.structured_formatting?.secondary_text || "",
+    }));
+
+    return success(res, { suggestions }, "Suggestions fetched");
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createProperty,
   updateProperty,
@@ -171,6 +253,7 @@ module.exports = {
   getMyProperties,
   getPropertyById,
   getPublicProperties,
+  getLocationSuggestions,
   adminGetAllProperties,
   updateApprovalStatus,
 };
