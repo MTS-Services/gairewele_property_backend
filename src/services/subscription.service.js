@@ -123,6 +123,55 @@ const initiateSubscription = async ({ userId, role, email, planKey }) => {
   };
 };
 
+// Paystack browser callback — no userId, lookup by reference only.
+const paystackCallback = async ({ reference }) => {
+  if (!reference) throw new ApiError(400, "Missing reference");
+  const payment = await prisma.payment.findUnique({
+    where: { reference },
+    include: { subscription: true },
+  });
+  if (!payment) throw new ApiError(404, "Payment reference not found");
+  if (payment.status === "SUCCESS") {
+    const sub = await prisma.subscription.findUnique({
+      where: { id: payment.subscriptionId },
+    });
+    return { subscription: sub, payment, alreadyVerified: true };
+  }
+  const verify = await paystack.verifyTransaction(reference);
+  const data = verify?.data;
+  const status = data?.status;
+  if (status !== "success") {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: "FAILED", rawPayload: data || null },
+    });
+    throw new ApiError(400, `Payment ${status || "not successful"}`);
+  }
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + 30);
+  const subscription = await prisma.subscription.update({
+    where: { id: payment.subscriptionId },
+    data: {
+      plan: payment.plan,
+      isActive: true,
+      startDate: new Date(),
+      endDate,
+      paystackPlanCode: payment.paystackPlanCode,
+      paystackCustomerCode: data?.customer?.customer_code || null,
+    },
+  });
+  const updatedPayment = await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: "SUCCESS",
+      channel: data?.channel || null,
+      paidAt: data?.paid_at ? new Date(data.paid_at) : new Date(),
+      rawPayload: data || null,
+    },
+  });
+  return { subscription, payment: updatedPayment, alreadyVerified: false };
+};
+
 // Verify a transaction (called after Paystack callback or manually with reference).
 const verifyAndActivate = async ({ userId, reference }) => {
   const payment = await prisma.payment.findUnique({
@@ -226,6 +275,7 @@ module.exports = {
   listPlans,
   getMySubscription,
   initiateSubscription,
+  paystackCallback,
   verifyAndActivate,
   cancelSubscription,
   getMyPaymentHistory,

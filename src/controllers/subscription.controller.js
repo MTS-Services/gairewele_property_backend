@@ -72,6 +72,16 @@ const getMyPaymentHistory = async (req, res, next) => {
   }
 };
 
+const paystackCallback = async (req, res, next) => {
+  try {
+    const reference = req.query.reference || req.query.trxref;
+    const data = await subscriptionService.paystackCallback({ reference });
+    return success(res, data, "Subscription activated");
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   listPlans,
   getMySubscription,
@@ -79,4 +89,5 @@ module.exports = {
   verifySubscription,
   cancelSubscription,
   getMyPaymentHistory,
+  paystackCallback,
 };
