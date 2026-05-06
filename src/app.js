@@ -9,21 +9,9 @@ const { errorHandler, notFound } = require("./middleware/error");
 
 const app = express();
 
-const ALLOWED_ORIGINS = [
-  "http://localhost:5173",
-  "https://prodev.property-file.com",
-];
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (Postman, mobile apps, curl)
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: origin '${origin}' not allowed`));
-      }
-    },
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
