@@ -58,6 +58,13 @@ const register = async ({
     },
   });
 
+  // Auto-create FREE subscription for professional roles
+  if (PROFESSIONAL_ROLES.includes(assignedRole)) {
+    await prisma.subscription.create({
+      data: { userId: user.id, plan: "FREE", isActive: true },
+    });
+  }
+
   const token = signToken({ id: user.id, role: user.role });
   return { user: sanitizeUser(user), token };
 };
@@ -108,6 +115,12 @@ const firebaseLogin = async ({ idToken, role, fullName, image }) => {
             : "USER",
       },
     });
+
+    if (PROFESSIONAL_ROLES.includes(user.role)) {
+      await prisma.subscription.create({
+        data: { userId: user.id, plan: "FREE", isActive: true },
+      });
+    }
   } else if (!user.firebaseUid) {
     user = await prisma.user.update({
       where: { id: user.id },

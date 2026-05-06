@@ -1,5 +1,7 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
+const { getPlan } = require("../config/plans");
+const { ensureSubscription } = require("./subscription.service");
 
 const ALLOWED_ROLES = ["AGENT", "DEVELOPER", "OWNER"];
 
@@ -104,6 +106,34 @@ const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
       400,
       `Invalid listingType. Valid values: ${validListingTypes.join(", ")}`,
     );
+
+  // ── Plan limits enforcement ───────────────────────────────────
+  const sub = await ensureSubscription(ownerId);
+  const plan = getPlan(sub.plan) || getPlan("FREE");
+
+  if (plan.features.maxListings !== null) {
+    const currentCount = await prisma.property.count({ where: { ownerId } });
+    if (currentCount >= plan.features.maxListings) {
+      throw new ApiError(
+        403,
+        `Your ${plan.name} plan allows only ${plan.features.maxListings} listings. Upgrade to add more.`,
+      );
+    }
+  }
+
+  if (imageUrls.length > plan.features.maxImagesPerListing) {
+    throw new ApiError(
+      403,
+      `Your ${plan.name} plan allows only ${plan.features.maxImagesPerListing} images per listing.`,
+    );
+  }
+
+  if (videoUrl && plan.features.videoPerListing < 1) {
+    throw new ApiError(
+      403,
+      `Your ${plan.name} plan does not allow video uploads. Upgrade to add a video.`,
+    );
+  }
 
   const property = await prisma.property.create({
     data: {
@@ -243,7 +273,6 @@ const getMyProperties = async ({ ownerId, status, page = 1 }) => {
   return { properties, total, page };
 };
 
-
 const getPropertyById = async ({ propertyId, userId, userRole }) => {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
@@ -319,7 +348,6 @@ const getPublicProperties = async ({
   return { properties, total, page, pageSize };
 };
 
-
 const adminGetAllProperties = async ({ status, page = 1 }) => {
   const PAGE_SIZE = 10;
   const where = {};
@@ -349,7 +377,6 @@ const adminGetAllProperties = async ({ status, page = 1 }) => {
 
   return { properties, total, page };
 };
-
 
 const updateApprovalStatus = async ({ propertyId, status }) => {
   const validStatuses = ["PENDING", "PUBLISHED", "REJECTED", "FEATURED"];

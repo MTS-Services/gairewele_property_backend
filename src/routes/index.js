@@ -9,6 +9,7 @@ const blogRoutes = require("./blog.routes");
 const propertyRequestRoutes = require("./propertyRequest.routes");
 const savedListingRoutes = require("./savedListing.routes");
 const userRoutes = require("./dashboard.routes");
+const subscriptionRoutes = require("./subscription.routes");
 
 router.get("/health", (req, res) => res.json({ status: "ok" }));
 router.use("/auth", authRoutes);
@@ -20,6 +21,7 @@ router.use("/ads", publicAdRoutes);
 router.use("/", blogRoutes);
 router.use("/property-requests", propertyRequestRoutes);
 router.use("/saved-listings", savedListingRoutes);
+router.use("/subscriptions", subscriptionRoutes);
 router.use("/", userRoutes);
 
 module.exports = router;
