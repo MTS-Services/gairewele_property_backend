@@ -1,9 +1,7 @@
 const blogService = require("../services/blog.service");
 const { success } = require("../utils/response");
 
-// ─── Admin ────────────────────────────────────────────────────────
 
-// GET /api/admin/blogs/stats
 const getBlogStats = async (req, res, next) => {
   try {
     const data = await blogService.getBlogStats();
@@ -13,7 +11,7 @@ const getBlogStats = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/blogs
+
 const adminGetAllBlogs = async (req, res, next) => {
   try {
     const { category, status, search, page, pageSize } = req.query;
@@ -30,7 +28,7 @@ const adminGetAllBlogs = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/blogs/:id
+
 const getAdminBlogById = async (req, res, next) => {
   try {
     const data = await blogService.getAdminBlogById({ blogId: req.params.id });
@@ -40,7 +38,7 @@ const getAdminBlogById = async (req, res, next) => {
   }
 };
 
-// POST /api/admin/blogs
+
 const createBlog = async (req, res, next) => {
   try {
     const {
@@ -84,7 +82,7 @@ const createBlog = async (req, res, next) => {
   }
 };
 
-// PATCH /api/admin/blogs/:id
+
 const updateBlog = async (req, res, next) => {
   try {
     const {
@@ -128,7 +126,7 @@ const updateBlog = async (req, res, next) => {
   }
 };
 
-// DELETE /api/admin/blogs/:id
+
 const deleteBlog = async (req, res, next) => {
   try {
     const data = await blogService.deleteBlog({ blogId: req.params.id });
@@ -138,8 +136,7 @@ const deleteBlog = async (req, res, next) => {
   }
 };
 
-// DELETE /api/admin/blogs/:id/images
-// Body: { imageUrl: "https://..." }
+
 const deleteBlogImage = async (req, res, next) => {
   try {
     const { imageUrl } = req.body;
@@ -157,7 +154,6 @@ const deleteBlogImage = async (req, res, next) => {
   }
 };
 
-// PATCH /api/admin/blogs/:id/status
 // Body: { status: "PUBLISHED" | "DRAFT" | "ARCHIVED" }
 const setBlogStatus = async (req, res, next) => {
   try {
@@ -176,9 +172,7 @@ const setBlogStatus = async (req, res, next) => {
   }
 };
 
-// ─── Public ───────────────────────────────────────────────────────
 
-// GET /api/blogs
 const getPublicBlogs = async (req, res, next) => {
   try {
     const { category, search, tag, page, pageSize } = req.query;
@@ -195,7 +189,7 @@ const getPublicBlogs = async (req, res, next) => {
   }
 };
 
-// GET /api/blogs/:slug
+
 const getBlogBySlug = async (req, res, next) => {
   try {
     const data = await blogService.getBlogBySlug({ slug: req.params.slug });
@@ -205,7 +199,7 @@ const getBlogBySlug = async (req, res, next) => {
   }
 };
 
-// GET /api/blogs/:blogId  (UUID)
+
 const getBlogById = async (req, res, next) => {
   try {
     const data = await blogService.getBlogById({ blogId: req.params.blogId });

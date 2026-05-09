@@ -4,6 +4,7 @@ const {
   userDashboard,
   agentDashboard,
   adminDashboard,
+  adminSubscriptionDashboard,
 } = require("../controllers/dashboard.controller");
 
 // GET /api/user/dashboard  — USER only
@@ -17,12 +18,20 @@ router.get(
   agentDashboard,
 );
 
-// GET /api/admin/dashboard  — ADMIN only
+
 router.get(
   "/admin/dashboard",
   authenticate,
   authorize("ADMIN"),
   adminDashboard,
+);
+
+// GET /api/admin/subscription-dashboard  — ADMIN only 
+router.get(
+  "/admin/subscription-dashboard",
+  authenticate,
+  authorize("ADMIN"),
+  adminSubscriptionDashboard,
 );
 
 module.exports = router;

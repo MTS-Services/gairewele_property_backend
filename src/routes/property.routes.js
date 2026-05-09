@@ -36,7 +36,7 @@ router.get(
   adminGetAllProperties,
 );
 
-// PATCH /api/properties/admin/:id/status
+
 router.patch(
   "/admin/:id/status",
   authenticate,
@@ -44,8 +44,7 @@ router.patch(
   updateApprovalStatus,
 );
 
-// ─── Listing owner routes ─────────────────────────────────────────
-// POST /api/properties  — create a new property
+
 router.post(
   "/",
   authenticate,
@@ -54,7 +53,6 @@ router.post(
   createProperty,
 );
 
-// GET /api/properties/my  — my own properties
 router.get(
   "/my",
   authenticate,
@@ -62,7 +60,6 @@ router.get(
   getMyProperties,
 );
 
-// PATCH /api/properties/:id  — update own property
 router.patch(
   "/:id",
   authenticate,
@@ -71,7 +68,7 @@ router.patch(
   updateProperty,
 );
 
-// DELETE /api/properties/:id/gallery/:imageId  — delete one image by UUID (owner)
+
 router.delete(
   "/:id/gallery/:imageId",
   authenticate,
@@ -79,7 +76,6 @@ router.delete(
   deletePropertyImage,
 );
 
-// DELETE /api/properties/:id  — delete (owner or admin)
 router.delete(
   "/:id",
   authenticate,
@@ -87,12 +83,8 @@ router.delete(
   deleteProperty,
 );
 
-// ─── Public / semi-public routes ──────────────────────────────────
-// GET /api/properties  — public listing (PUBLISHED + FEATURED)
 router.get("/", getPublicProperties);
 
-// GET /api/properties/:id  — single property detail
-// Optional auth: owners see own pending, public sees published/featured
 const optionalAuth = (req, res, next) => {
   const header = req.headers.authorization;
   if (header && header.startsWith("Bearer ")) {

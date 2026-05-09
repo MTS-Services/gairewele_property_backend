@@ -1,7 +1,7 @@
 const adminService = require("../services/admin.service");
 const { success } = require("../utils/response");
 
-// GET /api/admin/users
+
 const getAllUsers = async (req, res, next) => {
   try {
     const { role, search, page, pageSize } = req.query;

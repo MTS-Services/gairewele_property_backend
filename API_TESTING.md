@@ -204,6 +204,7 @@ then send that token here.
   "fullName": "Optional Name Override",
   "image": "https://example.com/avatar.png"
 }
+
 ```
 
 | Field      | Required | Notes                                                                                          |

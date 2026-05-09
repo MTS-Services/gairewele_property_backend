@@ -31,7 +31,7 @@ const fileFilter = (_req, file, cb) => {
 const adUpload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB (matches UI hint)
+  limits: { fileSize: 10 * 1024 * 1024 }, 
 }).single("image");
 
 const adFileUrl = (filename) => {

@@ -15,7 +15,6 @@ const toggleSaveListing = async (req, res, next) => {
   }
 };
 
-// GET /api/saved-listings  — all saved listings for logged-in user
 const getMySavedListings = async (req, res, next) => {
   try {
     const { page, pageSize, propertyType } = req.query;
@@ -31,7 +30,7 @@ const getMySavedListings = async (req, res, next) => {
   }
 };
 
-// GET /api/saved-listings/:propertyId  — single saved listing
+
 const getSavedListingById = async (req, res, next) => {
   try {
     const data = await savedListingService.getSavedListingById({

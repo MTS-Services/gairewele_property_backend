@@ -134,9 +134,7 @@ const firebaseLogin = async ({ idToken, role, fullName, image }) => {
   return { user: sanitizeUser(user), token };
 };
 
-// =====================
-// Forgot Password — send OTP
-// =====================
+
 const OTP_EXPIRY_MINUTES = 10;
 
 const generateOtp = () => String(crypto.randomInt(10000, 99999)); // always 5 digits
@@ -162,9 +160,7 @@ const forgotPassword = async ({ email }) => {
   await sendOtpEmail(email, otp);
 };
 
-// =====================
-// Resend OTP
-// =====================
+
 const resendOtp = async ({ email }) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return; // silent for security
@@ -184,9 +180,7 @@ const resendOtp = async ({ email }) => {
   await sendOtpEmail(email, otp);
 };
 
-// =====================
-// Verify OTP — returns a short-lived reset token
-// =====================
+
 const verifyOtp = async ({ email, otp }) => {
   const record = await prisma.otpToken.findFirst({
     where: { email, otp, used: false },

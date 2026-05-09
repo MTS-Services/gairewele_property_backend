@@ -30,9 +30,6 @@ const validateDates = (startDate, endDate) => {
   return { start, end };
 };
 
-// ─────────────────────────────────────────────────────────────────
-// ADMIN OPERATIONS
-// ─────────────────────────────────────────────────────────────────
 
 const createAd = async ({
   file,
@@ -308,9 +305,6 @@ const togglePauseAd = async ({ adId }) => {
   return { ad: updated, paused: updated.isPaused };
 };
 
-// ─────────────────────────────────────────────────────────────────
-// ADMIN STATS — aggregated numbers for dashboard header
-// ─────────────────────────────────────────────────────────────────
 
 const getAdStats = async () => {
   const [totals, byPlacement] = await Promise.all([

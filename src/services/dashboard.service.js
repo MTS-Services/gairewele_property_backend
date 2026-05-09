@@ -190,9 +190,128 @@ const getAdminDashboard = async ({ months = 6 } = {}) => {
   };
 };
 
+// ─── ADMIN Subscription / Revenue dashboard ──────────────────────
+const getAdminSubscriptionDashboard = async ({ year } = {}) => {
+  const now = new Date();
+  const targetYear = year ? parseInt(year, 10) : now.getFullYear();
+
+  const yearStart = new Date(targetYear, 0, 1);
+  const yearEnd = new Date(targetYear + 1, 0, 1);
+
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = thisMonthStart;
+
+  const [
+    totalRevenue,
+    revenueThisMonth,
+    revenueLastMonth,
+    packagesSold,
+    planCounts,
+  ] = await Promise.all([
+    // Total all-time revenue from successful payments
+    prisma.payment.aggregate({
+      _sum: { amount: true },
+      where: { status: "SUCCESS" },
+    }),
+
+    // Revenue this month
+    prisma.payment.aggregate({
+      _sum: { amount: true },
+      where: { status: "SUCCESS", paidAt: { gte: thisMonthStart } },
+    }),
+
+    // Revenue last month (for growth %)
+    prisma.payment.aggregate({
+      _sum: { amount: true },
+      where: {
+        status: "SUCCESS",
+        paidAt: { gte: lastMonthStart, lt: lastMonthEnd },
+      },
+    }),
+
+    // Total successful payments (packages sold)
+    prisma.payment.count({ where: { status: "SUCCESS" } }),
+
+    // Per-plan counts for package distribution
+    prisma.payment.groupBy({
+      by: ["plan"],
+      where: { status: "SUCCESS" },
+      _count: { _all: true },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  // Revenue growth %
+  const thisMonthNum = Number(revenueThisMonth._sum.amount || 0);
+  const lastMonthNum = Number(revenueLastMonth._sum.amount || 0);
+  const revenueGrowth =
+    lastMonthNum === 0
+      ? null
+      : Math.round(((thisMonthNum - lastMonthNum) / lastMonthNum) * 1000) / 10;
+
+  // Top-selling package
+  const topPlan = planCounts.sort((a, b) => b._count._all - a._count._all)[0];
+
+  // Package distribution percentages
+  const packageDistribution = planCounts.map((p) => ({
+    plan: p.plan,
+    count: p._count._all,
+    revenue: Number(p._sum.amount || 0),
+    percentage:
+      packagesSold > 0
+        ? Math.round((p._count._all / packagesSold) * 1000) / 10
+        : 0,
+  }));
+
+  // Monthly revenue breakdown for the target year (all 12 months)
+  const monthlyPayments = await prisma.payment.findMany({
+    where: { status: "SUCCESS", paidAt: { gte: yearStart, lt: yearEnd } },
+    select: { amount: true, paidAt: true, plan: true },
+  });
+
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const revenueOverview = monthNames.map((month, i) => ({
+    month,
+    revenue: 0,
+    count: 0,
+  }));
+
+  for (const p of monthlyPayments) {
+    const m = new Date(p.paidAt).getMonth();
+    revenueOverview[m].revenue += Number(p.amount);
+    revenueOverview[m].count += 1;
+  }
+
+  return {
+    stats: {
+      totalRevenue: Number(totalRevenue._sum.amount || 0),
+      revenueThisMonth: thisMonthNum,
+      revenueGrowthPercent: revenueGrowth,
+      packagesSold,
+      topSellingPackage: topPlan?.plan || null,
+    },
+    revenueOverview,
+    packageDistribution,
+  };
+};
+
 module.exports = {
   getUserDashboard,
   getAgentDashboard,
   getAdminDashboard,
-  getAdminDashboard,
+  getAdminSubscriptionDashboard,
 };

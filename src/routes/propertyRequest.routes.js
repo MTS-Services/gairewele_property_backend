@@ -9,13 +9,12 @@ const {
   deleteRequest,
 } = require("../controllers/propertyRequest.controller");
 
-// USER — submit a property request
+
 router.post("/", authenticate, authorize("USER"), createRequest);
 
-// USER — view own request history + stats
 router.get("/my", authenticate, authorize("USER"), getMyRequests);
 
-// AGENT / DEVELOPER / OWNER — view all requests
+
 router.get(
   "/",
   authenticate,
@@ -23,10 +22,9 @@ router.get(
   getAllRequests,
 );
 
-// Any authenticated user — view single request (USER can only see own)
+
 router.get("/:id", authenticate, getRequestById);
 
-// AGENT / DEVELOPER / OWNER — change request status
 router.patch(
   "/:id/status",
   authenticate,
@@ -34,7 +32,7 @@ router.patch(
   updateRequestStatus,
 );
 
-// USER (own) / AGENT / DEVELOPER / OWNER — delete a request
+
 router.delete("/:id", authenticate, deleteRequest);
 
 module.exports = router;

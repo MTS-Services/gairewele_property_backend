@@ -40,7 +40,7 @@ const fileFilter = (_req, file, cb) => {
 const blogUpload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB per file
+  limits: { fileSize: 15 * 1024 * 1024 }, 
 }).fields([
   { name: "images", maxCount: 10 },
   { name: "pdf", maxCount: 1 },

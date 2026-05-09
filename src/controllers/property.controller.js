@@ -96,8 +96,7 @@ const https = require("https");
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
-// Resolve a place name to a short human-readable city/area string via Google Geocoding.
-// Falls back to the raw input if the API call fails.
+
 const resolveLocation = (input) =>
   new Promise((resolve) => {
     if (!input) return resolve(null);
@@ -146,7 +145,7 @@ const getPublicProperties = async (req, res, next) => {
       pageSize,
     } = req.query;
 
-    // Resolve location string via Google Geocoding if provided
+   
     const resolvedLocation = await resolveLocation(location);
 
     const data = await propertyService.getPublicProperties({
@@ -169,7 +168,6 @@ const getPublicProperties = async (req, res, next) => {
   }
 };
 
-// ─── ADMIN ONLY ───────────────────────────────────────────────────
 
 const adminGetAllProperties = async (req, res, next) => {
   try {

@@ -2,6 +2,7 @@ const {
   getUserDashboard,
   getAgentDashboard,
   getAdminDashboard,
+  getAdminSubscriptionDashboard,
 } = require("../services/dashboard.service");
 const { success } = require("../utils/response");
 
@@ -36,4 +37,21 @@ const adminDashboard = async (req, res, next) => {
   }
 };
 
-module.exports = { userDashboard, agentDashboard, adminDashboard };
+// GET /api/admin/subscription-dashboard  — ADMIN only
+const adminSubscriptionDashboard = async (req, res, next) => {
+  try {
+    const data = await getAdminSubscriptionDashboard({
+      year: req.query.year,
+    });
+    return success(res, data, "Subscription dashboard fetched");
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = {
+  userDashboard,
+  agentDashboard,
+  adminDashboard,
+  adminSubscriptionDashboard,
+};

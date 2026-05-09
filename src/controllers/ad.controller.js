@@ -1,7 +1,6 @@
 const adService = require("../services/ad.service");
 const { success } = require("../utils/response");
 
-// POST /api/admin/ads
 const createAd = async (req, res, next) => {
   try {
     const {
@@ -30,7 +29,7 @@ const createAd = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/ads
+
 const adminGetAllAds = async (req, res, next) => {
   try {
     const { placement, status, search, page, pageSize } = req.query;
@@ -47,7 +46,7 @@ const adminGetAllAds = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/ads/:id
+
 const getAdById = async (req, res, next) => {
   try {
     const ad = await adService.getAdById({ adId: req.params.id });
@@ -57,7 +56,7 @@ const getAdById = async (req, res, next) => {
   }
 };
 
-// PATCH /api/admin/ads/:id
+
 const updateAd = async (req, res, next) => {
   try {
     const {
@@ -109,7 +108,6 @@ const getAdsByPlacement = async (req, res, next) => {
   }
 };
 
-// PUBLIC: POST /api/ads/:id/track
 const trackAd = async (req, res, next) => {
   try {
     const { type } = req.body;

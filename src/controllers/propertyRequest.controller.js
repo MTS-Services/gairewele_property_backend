@@ -1,8 +1,7 @@
 const propertyRequestService = require("../services/propertyRequest.service");
 const { success, error } = require("../utils/response");
 
-// POST /api/property-requests
-// Any authenticated user can submit a request
+
 const createRequest = async (req, res, next) => {
   try {
     const {
@@ -44,8 +43,7 @@ const createRequest = async (req, res, next) => {
   }
 };
 
-// GET /api/property-requests/my
-// USER sees own requests + dashboard stats
+
 const getMyRequests = async (req, res, next) => {
   try {
     const { status, page, pageSize } = req.query;
@@ -61,8 +59,7 @@ const getMyRequests = async (req, res, next) => {
   }
 };
 
-// GET /api/property-requests
-// AGENT / DEVELOPER / OWNER — see all requests
+
 const getAllRequests = async (req, res, next) => {
   try {
     const { status, search, page, pageSize } = req.query;
@@ -78,8 +75,7 @@ const getAllRequests = async (req, res, next) => {
   }
 };
 
-// GET /api/property-requests/:id
-// AGENT/DEVELOPER/OWNER sees any; USER sees only own
+
 const getRequestById = async (req, res, next) => {
   try {
     const data = await propertyRequestService.getRequestById({
@@ -93,8 +89,7 @@ const getRequestById = async (req, res, next) => {
   }
 };
 
-// PATCH /api/property-requests/:id/status
-// AGENT / DEVELOPER / OWNER only
+
 const updateRequestStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -110,8 +105,7 @@ const updateRequestStatus = async (req, res, next) => {
   }
 };
 
-// DELETE /api/property-requests/:id
-// USER can delete own; AGENT / DEVELOPER / OWNER can delete any
+
 const deleteRequest = async (req, res, next) => {
   try {
     const data = await propertyRequestService.deleteRequest({
