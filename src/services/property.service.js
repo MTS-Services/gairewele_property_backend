@@ -293,9 +293,13 @@ const getPublicProperties = async ({
   page = 1,
   pageSize = 10,
 }) => {
-  const where = {
-    approvalStatus: { in: ["PUBLISHED", "FEATURED"] },
-  };
+  const where = {};
+
+  if (filters.approvalStatus) {
+    where.approvalStatus = filters.approvalStatus;
+  } else {
+    where.approvalStatus = { in: ["PUBLISHED", "FEATURED"] };
+  }
 
   // Title search
   if (filters.search)

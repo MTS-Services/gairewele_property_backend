@@ -96,7 +96,6 @@ const https = require("https");
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
-
 const resolveLocation = (input) =>
   new Promise((resolve) => {
     if (!input) return resolve(null);
@@ -134,6 +133,7 @@ const getPublicProperties = async (req, res, next) => {
   try {
     const {
       search,
+      approvalStatus,
       propertyType,
       listingType,
       condition,
@@ -145,12 +145,12 @@ const getPublicProperties = async (req, res, next) => {
       pageSize,
     } = req.query;
 
-   
     const resolvedLocation = await resolveLocation(location);
 
     const data = await propertyService.getPublicProperties({
       filters: {
         search: search || null,
+        approvalStatus: approvalStatus ? approvalStatus.toUpperCase() : null,
         propertyType: propertyType ? propertyType.toUpperCase() : null,
         listingType: listingType ? listingType.toUpperCase() : null,
         condition: condition ? condition.toUpperCase() : null,
@@ -167,7 +167,6 @@ const getPublicProperties = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const adminGetAllProperties = async (req, res, next) => {
   try {
