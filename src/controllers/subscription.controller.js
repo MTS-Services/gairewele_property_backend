@@ -72,13 +72,23 @@ const getMyPaymentHistory = async (req, res, next) => {
   }
 };
 
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
 const paystackCallback = async (req, res, next) => {
   try {
     const reference = req.query.reference || req.query.trxref;
     const data = await subscriptionService.paystackCallback({ reference });
-    return success(res, data, "Subscription activated");
+    // Redirect browser to frontend success page with plan info
+    const plan = data.subscription?.plan || "";
+    return res.redirect(
+      `${FRONTEND_URL}/subscription/success?reference=${reference}&plan=${plan}`,
+    );
   } catch (err) {
-    next(err);
+    // Redirect to failure page so frontend can show error UI
+    const reference = req.query.reference || req.query.trxref || "";
+    return res.redirect(
+      `${FRONTEND_URL}/subscription/failed?reference=${reference}`,
+    );
   }
 };
 
