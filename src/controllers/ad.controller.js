@@ -1,6 +1,63 @@
 const adService = require("../services/ad.service");
 const { success } = require("../utils/response");
 
+const csvEscape = (value) => {
+  if (value === null || value === undefined) return "";
+  const asString = String(value);
+  if (/[",\n\r]/.test(asString)) {
+    return `"${asString.replace(/"/g, '""')}"`;
+  }
+  return asString;
+};
+
+const adsToCsv = (ads) => {
+  const headers = [
+    "id",
+    "title",
+    "description",
+    "placement",
+    "status",
+    "liveLink",
+    "isPaused",
+    "isLive",
+    "isExpired",
+    "isScheduled",
+    "startDate",
+    "endDate",
+    "impressions",
+    "clicks",
+    "createdByName",
+    "createdByEmail",
+    "createdAt",
+  ];
+
+  const rows = ads.map((ad) =>
+    [
+      ad.id,
+      ad.title,
+      ad.description,
+      ad.placement,
+      ad.status,
+      ad.liveLink,
+      ad.isPaused,
+      ad.isLive,
+      ad.isExpired,
+      ad.isScheduled,
+      ad.startDate?.toISOString?.() || ad.startDate,
+      ad.endDate?.toISOString?.() || ad.endDate,
+      ad.impressions,
+      ad.clicks,
+      ad.createdByName,
+      ad.createdByEmail,
+      ad.createdAt?.toISOString?.() || ad.createdAt,
+    ]
+      .map(csvEscape)
+      .join(","),
+  );
+
+  return [headers.join(","), ...rows].join("\n");
+};
+
 const createAd = async (req, res, next) => {
   try {
     const {
@@ -29,7 +86,6 @@ const createAd = async (req, res, next) => {
   }
 };
 
-
 const adminGetAllAds = async (req, res, next) => {
   try {
     const { placement, status, search, page, pageSize } = req.query;
@@ -46,7 +102,6 @@ const adminGetAllAds = async (req, res, next) => {
   }
 };
 
-
 const getAdById = async (req, res, next) => {
   try {
     const ad = await adService.getAdById({ adId: req.params.id });
@@ -55,7 +110,6 @@ const getAdById = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const updateAd = async (req, res, next) => {
   try {
@@ -143,6 +197,30 @@ const getAdStats = async (req, res, next) => {
   }
 };
 
+const exportAdsCsv = async (req, res, next) => {
+  try {
+    const { placement, status, search } = req.query;
+    const ads = await adService.getAdsForExport({
+      placement: placement ? placement.toUpperCase() : null,
+      status: status ? status.toUpperCase() : null,
+      search: search || null,
+    });
+
+    const now = new Date().toISOString().slice(0, 10);
+    const csv = adsToCsv(ads);
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="admin-ads-${now}.csv"`,
+    );
+
+    return res.status(200).send(`\uFEFF${csv}`);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createAd,
   adminGetAllAds,
@@ -153,4 +231,5 @@ module.exports = {
   trackAd,
   togglePauseAd,
   getAdStats,
+  exportAdsCsv,
 };

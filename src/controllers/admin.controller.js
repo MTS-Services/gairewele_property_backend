@@ -1,6 +1,46 @@
 const adminService = require("../services/admin.service");
 const { success } = require("../utils/response");
 
+const csvEscape = (value) => {
+  if (value === null || value === undefined) return "";
+  const asString = String(value);
+  if (/[",\n\r]/.test(asString)) {
+    return `"${asString.replace(/"/g, '""')}"`;
+  }
+  return asString;
+};
+
+const usersToCsv = (users) => {
+  const headers = [
+    "id",
+    "fullName",
+    "email",
+    "role",
+    "phoneNumber",
+    "whatsappNumber",
+    "companyName",
+    "isSuspended",
+    "createdAt",
+  ];
+
+  const rows = users.map((user) =>
+    [
+      user.id,
+      user.fullName,
+      user.email,
+      user.role,
+      user.phoneNumber,
+      user.whatsappNumber,
+      user.companyName,
+      user.isSuspended,
+      user.createdAt?.toISOString?.() || user.createdAt,
+    ]
+      .map(csvEscape)
+      .join(","),
+  );
+
+  return [headers.join(","), ...rows].join("\n");
+};
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -12,6 +52,29 @@ const getAllUsers = async (req, res, next) => {
       pageSize: parseInt(pageSize, 10) || 20,
     });
     return success(res, data, "Users fetched");
+  } catch (err) {
+    next(err);
+  }
+};
+
+const exportUsersCsv = async (req, res, next) => {
+  try {
+    const { role, search } = req.query;
+    const users = await adminService.getUsersForExport({
+      role: role ? role.toUpperCase() : null,
+      search: search || null,
+    });
+
+    const now = new Date().toISOString().slice(0, 10);
+    const csv = usersToCsv(users);
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="admin-users-${now}.csv"`,
+    );
+
+    return res.status(200).send(`\uFEFF${csv}`);
   } catch (err) {
     next(err);
   }
@@ -60,6 +123,7 @@ const getAllListings = async (req, res, next) => {
 
 module.exports = {
   getAllUsers,
+  exportUsersCsv,
   getUserById,
   toggleSuspendUser,
   getAllListings,

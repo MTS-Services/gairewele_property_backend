@@ -9,12 +9,13 @@ const {
   deleteAd,
   togglePauseAd,
   getAdStats,
+  exportAdsCsv,
 } = require("../controllers/ad.controller");
-
 
 router.use(authenticate, authorize("ADMIN"));
 
 router.get("/stats", getAdStats);
+router.get("/export", exportAdsCsv);
 router.get("/", adminGetAllAds);
 router.get("/:id", getAdById);
 router.post("/", adUpload, createAd);

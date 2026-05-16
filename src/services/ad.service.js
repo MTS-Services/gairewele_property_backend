@@ -30,7 +30,6 @@ const validateDates = (startDate, endDate) => {
   return { start, end };
 };
 
-
 const createAd = async ({
   file,
   title,
@@ -245,7 +244,6 @@ const deleteAd = async ({ adId }) => {
   return { id: adId };
 };
 
-
 // Ordered by status priority: SPONSOR > FEATURED > STANDARD, then newest first.
 const getAdsByPlacement = async ({ placement, limit = 10 }) => {
   if (!VALID_PLACEMENTS.includes(placement))
@@ -270,7 +268,6 @@ const getAdsByPlacement = async ({ placement, limit = 10 }) => {
   return ads;
 };
 
-
 const trackAd = async ({ adId, type }) => {
   if (!adId) throw new ApiError(400, "Ad id is required");
   if (type !== "impression" && type !== "click")
@@ -291,6 +288,64 @@ const trackAd = async ({ adId, type }) => {
   return updated;
 };
 
+const getAdsForExport = async ({ placement, status, search }) => {
+  const where = {};
+
+  if (placement) {
+    if (!VALID_PLACEMENTS.includes(placement))
+      throw new ApiError(
+        400,
+        `Invalid placement. Valid: ${VALID_PLACEMENTS.join(", ")}`,
+      );
+    where.placement = placement;
+  }
+
+  if (status) {
+    if (!VALID_STATUSES.includes(status))
+      throw new ApiError(
+        400,
+        `Invalid status. Valid: ${VALID_STATUSES.join(", ")}`,
+      );
+    where.status = status;
+  }
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const now = new Date();
+  const ads = await prisma.advertisement.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      placement: true,
+      status: true,
+      liveLink: true,
+      isPaused: true,
+      startDate: true,
+      endDate: true,
+      impressions: true,
+      clicks: true,
+      createdAt: true,
+      createdBy: { select: { fullName: true, email: true } },
+    },
+  });
+
+  return ads.map((ad) => ({
+    ...ad,
+    isLive: !ad.isPaused && ad.startDate <= now && ad.endDate >= now,
+    isExpired: !ad.isPaused && ad.endDate < now,
+    isScheduled: !ad.isPaused && ad.startDate > now,
+    createdByName: ad.createdBy?.fullName || "",
+    createdByEmail: ad.createdBy?.email || "",
+  }));
+};
 
 const togglePauseAd = async ({ adId }) => {
   const ad = await prisma.advertisement.findUnique({ where: { id: adId } });
@@ -304,7 +359,6 @@ const togglePauseAd = async ({ adId }) => {
 
   return { ad: updated, paused: updated.isPaused };
 };
-
 
 const getAdStats = async () => {
   const [totals, byPlacement] = await Promise.all([
@@ -357,6 +411,7 @@ module.exports = {
   trackAd,
   togglePauseAd,
   getAdStats,
+  getAdsForExport,
   VALID_PLACEMENTS,
   VALID_STATUSES,
 };

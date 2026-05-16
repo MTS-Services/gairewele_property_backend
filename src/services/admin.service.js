@@ -2,6 +2,7 @@ const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 
 const VALID_ROLES = ["USER", "ADMIN", "AGENT", "DEVELOPER", "OWNER"];
+const NON_ADMIN_ROLES = VALID_ROLES.filter((r) => r !== "ADMIN");
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -9,10 +10,7 @@ const sanitizeUser = (user) => {
   return rest;
 };
 
-
-const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
-  // Exclude ADMIN accounts from the listing
-  const NON_ADMIN_ROLES = VALID_ROLES.filter((r) => r !== "ADMIN");
+const buildUsersWhereClause = ({ role, search }) => {
   const where = { role: { in: NON_ADMIN_ROLES } };
 
   if (role) {
@@ -33,6 +31,12 @@ const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
       { companyName: { contains: search, mode: "insensitive" } },
     ];
   }
+
+  return where;
+};
+
+const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
+  const where = buildUsersWhereClause({ role, search });
 
   const [users, total, roleGroups] = await Promise.all([
     prisma.user.findMany({
@@ -64,6 +68,25 @@ const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
   };
 };
 
+const getUsersForExport = async ({ role, search }) => {
+  const where = buildUsersWhereClause({ role, search });
+
+  return prisma.user.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      phoneNumber: true,
+      whatsappNumber: true,
+      companyName: true,
+      isSuspended: true,
+      createdAt: true,
+    },
+  });
+};
 
 const getUserById = async ({ userId }) => {
   const user = await prisma.user.findUnique({
@@ -96,7 +119,6 @@ const toggleSuspendUser = async ({ userId, adminId }) => {
   };
 };
 
-
 const PROPERTY_INCLUDE_ADMIN = {
   images: { orderBy: { createdAt: "asc" } },
   owner: {
@@ -112,9 +134,9 @@ const PROPERTY_INCLUDE_ADMIN = {
 };
 
 const getAllListings = async ({
-  ownerRole, 
-  approvalStatus, 
-  search, 
+  ownerRole,
+  approvalStatus,
+  search,
   page = 1,
   pageSize = 20,
 }) => {
@@ -169,7 +191,6 @@ const getAllListings = async ({
       }),
     ]);
 
- 
   const countsByCreatorRole = { AGENT: 0, DEVELOPER: 0, OWNER: 0 };
   for (const u of listingsByCreatorRole) {
     countsByCreatorRole[u.role] =
@@ -192,6 +213,7 @@ const getAllListings = async ({
 
 module.exports = {
   getAllUsers,
+  getUsersForExport,
   getUserById,
   toggleSuspendUser,
   getAllListings,

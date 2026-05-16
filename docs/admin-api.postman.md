@@ -97,6 +97,40 @@ Authorization: Bearer {{adminToken}}
 
 ## 2. Get Single User
 
+## 1b. Export Users as CSV
+
+**GET** `{{baseUrl}}/admin/users/export`
+
+Returns a downloadable `.csv` file for User Management exports.
+
+### Query params (all optional)
+
+| Param    | Example | Notes                                                |
+| -------- | ------- | ---------------------------------------------------- |
+| `role`   | `AGENT` | `USER` \| `AGENT` \| `DEVELOPER` \| `OWNER`          |
+| `search` | `john`  | Matches fullName / email / phoneNumber / companyName |
+
+### Examples
+
+- Export all users: `GET /admin/users/export`
+- Export only owners: `GET /admin/users/export?role=OWNER`
+- Export filtered users: `GET /admin/users/export?role=AGENT&search=lagos`
+
+### Headers
+
+```
+Authorization: Bearer {{adminToken}}
+```
+
+### Response
+
+- Content-Type: `text/csv`
+- Content-Disposition: attachment with filename like `admin-users-YYYY-MM-DD.csv`
+
+---
+
+## 2. Get Single User
+
 **GET** `{{baseUrl}}/admin/users/:id`
 
 ### Headers
