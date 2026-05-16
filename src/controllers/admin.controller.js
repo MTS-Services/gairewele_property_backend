@@ -1,4 +1,5 @@
 const adminService = require("../services/admin.service");
+const subscriptionService = require("../services/subscription.service");
 const { success } = require("../utils/response");
 
 const csvEscape = (value) => {
@@ -8,6 +9,47 @@ const csvEscape = (value) => {
     return `"${asString.replace(/"/g, '""')}"`;
   }
   return asString;
+};
+
+const paymentsToCsv = (payments, totalRevenue) => {
+  const headers = [
+    "id",
+    "reference",
+    "plan",
+    "amount",
+    "currency",
+    "status",
+    "channel",
+    "paidAt",
+    "userFullName",
+    "userEmail",
+    "userRole",
+    "companyName",
+    "createdAt",
+  ];
+
+  const rows = payments.map((p) =>
+    [
+      p.id,
+      p.reference,
+      p.plan,
+      p.amount,
+      p.currency,
+      p.status,
+      p.channel,
+      p.paidAt?.toISOString?.() || p.paidAt || "",
+      p.subscription?.user?.fullName,
+      p.subscription?.user?.email,
+      p.subscription?.user?.role,
+      p.subscription?.user?.companyName,
+      p.createdAt?.toISOString?.() || p.createdAt,
+    ]
+      .map(csvEscape)
+      .join(","),
+  );
+
+  const summary = `# Total Revenue (SUCCESS payments): ${totalRevenue.toLocaleString("en-NG", { minimumFractionDigits: 2 })} NGN`;
+  return [summary, headers.join(","), ...rows].join("\n");
 };
 
 const usersToCsv = (users) => {
@@ -121,10 +163,37 @@ const getAllListings = async (req, res, next) => {
   }
 };
 
+const exportPaymentsCsv = async (req, res, next) => {
+  try {
+    const { plan, status, startDate, endDate } = req.query;
+    const { payments, totalRevenue } =
+      await subscriptionService.getPaymentsForExport({
+        plan: plan ? plan.toUpperCase() : null,
+        status: status ? status.toUpperCase() : null,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      });
+
+    const now = new Date().toISOString().slice(0, 10);
+    const csv = paymentsToCsv(payments, totalRevenue);
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="payment-report-${now}.csv"`,
+    );
+
+    return res.status(200).send(`\uFEFF${csv}`);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAllUsers,
   exportUsersCsv,
   getUserById,
   toggleSuspendUser,
   getAllListings,
+  exportPaymentsCsv,
 };

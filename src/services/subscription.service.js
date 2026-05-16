@@ -254,6 +254,72 @@ const cancelSubscription = async ({ userId, role }) => {
   return { subscription: updated, plan: getPlan("FREE") };
 };
 
+// Admin: all payments for CSV export with optional filters.
+const getPaymentsForExport = async ({ plan, status, startDate, endDate }) => {
+  const VALID_PLANS = Object.keys(PLANS);
+  const VALID_STATUSES = ["PENDING", "SUCCESS", "FAILED"];
+
+  if (plan && !VALID_PLANS.includes(plan))
+    throw new ApiError(400, `Invalid plan. Valid: ${VALID_PLANS.join(", ")}`);
+  if (status && !VALID_STATUSES.includes(status))
+    throw new ApiError(
+      400,
+      `Invalid status. Valid: ${VALID_STATUSES.join(", ")}`,
+    );
+
+  const where = {};
+  if (plan) where.plan = plan;
+  if (status) where.status = status;
+  if (startDate || endDate) {
+    where.createdAt = {};
+    if (startDate) {
+      const s = new Date(startDate);
+      if (isNaN(s)) throw new ApiError(400, "Invalid startDate");
+      where.createdAt.gte = s;
+    }
+    if (endDate) {
+      const e = new Date(endDate);
+      if (isNaN(e)) throw new ApiError(400, "Invalid endDate");
+      where.createdAt.lte = e;
+    }
+  }
+
+  const payments = await prisma.payment.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      reference: true,
+      plan: true,
+      amount: true,
+      currency: true,
+      status: true,
+      channel: true,
+      paidAt: true,
+      createdAt: true,
+      subscription: {
+        select: {
+          user: {
+            select: {
+              fullName: true,
+              email: true,
+              role: true,
+              companyName: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Compute totals
+  const totalRevenue = payments
+    .filter((p) => p.status === "SUCCESS")
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+  return { payments, totalRevenue };
+};
+
 // Payment history for current user.
 const getMyPaymentHistory = async ({ userId, role }) => {
   if (!SUBSCRIBABLE_ROLES.includes(role)) {
@@ -270,6 +336,46 @@ const getMyPaymentHistory = async ({ userId, role }) => {
   return { payments };
 };
 
+// Billing history for PDF export (AGENT / DEVELOPER / OWNER only).
+const getBillingHistoryForPdf = async ({ userId, role }) => {
+  if (!SUBSCRIBABLE_ROLES.includes(role)) {
+    throw new ApiError(
+      403,
+      "Only AGENT, DEVELOPER and OWNER can export billing history",
+    );
+  }
+
+  const sub = await ensureSubscription(userId);
+
+  const [user, payments] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { fullName: true, email: true, companyName: true, role: true },
+    }),
+    prisma.payment.findMany({
+      where: { subscriptionId: sub.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        reference: true,
+        plan: true,
+        amount: true,
+        currency: true,
+        status: true,
+        channel: true,
+        paidAt: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+
+  const totalPaid = payments
+    .filter((p) => p.status === "SUCCESS")
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+  return { user, subscription: sub, payments, totalPaid };
+};
+
 module.exports = {
   ensureSubscription,
   listPlans,
@@ -279,4 +385,6 @@ module.exports = {
   verifyAndActivate,
   cancelSubscription,
   getMyPaymentHistory,
+  getBillingHistoryForPdf,
+  getPaymentsForExport,
 };
