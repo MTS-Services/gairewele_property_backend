@@ -33,7 +33,7 @@ const getUserDashboard = async ({ userId }) => {
   };
 };
 
-// ─── AGENT / DEVELOPER / OWNER dashboard ─────────────────────────
+
 const getAgentDashboard = async ({ userId }) => {
   const [
     activeListingsCount,
@@ -41,7 +41,7 @@ const getAgentDashboard = async ({ userId }) => {
     subscription,
     recentListings,
   ] = await Promise.all([
-    // Active = PUBLISHED or FEATURED
+   
     prisma.property.count({
       where: {
         ownerId: userId,
@@ -89,14 +89,12 @@ const getAgentDashboard = async ({ userId }) => {
   };
 };
 
-// ─── ADMIN dashboard ───────────────────────────────────────────────
 const getAdminDashboard = async ({ months = 6 } = {}) => {
   const now = new Date();
 
-  // Start of current month for "monthly revenue" (sum of askingPrice of published listings this month)
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // Start date for revenue trend (go back `months` months)
+
   const trendStart = new Date(
     now.getFullYear(),
     now.getMonth() - (months - 1),
@@ -110,13 +108,12 @@ const getAdminDashboard = async ({ months = 6 } = {}) => {
     monthlyRevenue,
     recentListings,
   ] = await Promise.all([
-    // Total non-admin users
+  
     prisma.user.count({ where: { role: { not: "ADMIN" } } }),
 
-    // Total listings (all statuses)
     prisma.property.count(),
 
-    // Active ads: not paused, within date range
+
     prisma.advertisement.count({
       where: {
         isPaused: false,
@@ -125,7 +122,6 @@ const getAdminDashboard = async ({ months = 6 } = {}) => {
       },
     }),
 
-    // Monthly revenue = sum of askingPrice of properties published this month
     prisma.property.aggregate({
       _sum: { askingPrice: true },
       where: {
@@ -134,7 +130,7 @@ const getAdminDashboard = async ({ months = 6 } = {}) => {
       },
     }),
 
-    // Active listings management table — most recent 10
+  
     prisma.property.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
@@ -151,7 +147,7 @@ const getAdminDashboard = async ({ months = 6 } = {}) => {
     }),
   ]);
 
-  // Revenue trend: count of published listings grouped by month for last N months
+
   const trendRaw = await prisma.property.groupBy({
     by: ["createdAt"],
     where: {
@@ -215,7 +211,7 @@ const getAdminSubscriptionDashboard = async ({ year } = {}) => {
       where: { status: "SUCCESS" },
     }),
 
-    // Revenue this month
+   
     prisma.payment.aggregate({
       _sum: { amount: true },
       where: { status: "SUCCESS", paidAt: { gte: thisMonthStart } },
@@ -230,10 +226,9 @@ const getAdminSubscriptionDashboard = async ({ year } = {}) => {
       },
     }),
 
-    // Total successful payments (packages sold)
+  
     prisma.payment.count({ where: { status: "SUCCESS" } }),
 
-    // Per-plan counts for package distribution
     prisma.payment.groupBy({
       by: ["plan"],
       where: { status: "SUCCESS" },
@@ -242,7 +237,7 @@ const getAdminSubscriptionDashboard = async ({ year } = {}) => {
     }),
   ]);
 
-  // Revenue growth %
+
   const thisMonthNum = Number(revenueThisMonth._sum.amount || 0);
   const lastMonthNum = Number(revenueLastMonth._sum.amount || 0);
   const revenueGrowth =
@@ -250,10 +245,10 @@ const getAdminSubscriptionDashboard = async ({ year } = {}) => {
       ? null
       : Math.round(((thisMonthNum - lastMonthNum) / lastMonthNum) * 1000) / 10;
 
-  // Top-selling package
+ 
   const topPlan = planCounts.sort((a, b) => b._count._all - a._count._all)[0];
 
-  // Package distribution percentages
+ 
   const packageDistribution = planCounts.map((p) => ({
     plan: p.plan,
     count: p._count._all,
@@ -264,7 +259,7 @@ const getAdminSubscriptionDashboard = async ({ year } = {}) => {
         : 0,
   }));
 
-  // Monthly revenue breakdown for the target year (all 12 months)
+
   const monthlyPayments = await prisma.payment.findMany({
     where: { status: "SUCCESS", paidAt: { gte: yearStart, lt: yearEnd } },
     select: { amount: true, paidAt: true, plan: true },

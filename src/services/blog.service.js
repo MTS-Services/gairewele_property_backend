@@ -236,13 +236,13 @@ const updateBlog = async ({
     }
   }
 
-  // Replace all images — delete old files from disk, set new ones
+
   if (imageFiles && imageFiles.length > 0) {
     blog.images.forEach((url) => removeFile(url, "blog"));
     data.images = imageFiles.map((f) => blogImageUrl(f.filename));
   }
 
-  // Replace PDF if new one uploaded
+ 
   if (pdfFile) {
     data.pdfFileUrl = blogPdfUrl(pdfFile.filename);
     removeFile(blog.pdfFileUrl, "blogPdf");
@@ -263,14 +263,13 @@ const deleteBlog = async ({ blogId }) => {
 
   await prisma.blog.delete({ where: { id: blogId } });
 
-  // Clean up files
   blog.images.forEach((url) => removeFile(url, "blog"));
   removeFile(blog.pdfFileUrl, "blogPdf");
 
   return { id: blogId };
 };
 
-// Delete a single image from a blog post
+
 const deleteBlogImage = async ({ blogId, imageUrl }) => {
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
   if (!blog) throw new ApiError(404, "Blog not found");
@@ -287,7 +286,6 @@ const deleteBlogImage = async ({ blogId, imageUrl }) => {
   return updated;
 };
 
-// Change status: publish, archive, draft
 const setBlogStatus = async ({ blogId, status }) => {
   if (!VALID_STATUSES.includes(status))
     throw new ApiError(
@@ -307,9 +305,6 @@ const setBlogStatus = async ({ blogId, status }) => {
   return decorateBlog(updated);
 };
 
-// ─────────────────────────────────────────────────────────────────
-// ADMIN — LIST + STATS
-// ─────────────────────────────────────────────────────────────────
 
 const adminGetAllBlogs = async ({
   category,
@@ -431,9 +426,6 @@ const getBlogStats = async () => {
   };
 };
 
-// ─────────────────────────────────────────────────────────────────
-// PUBLIC
-// ─────────────────────────────────────────────────────────────────
 
 const getPublicBlogs = async ({
   category,
@@ -514,7 +506,7 @@ const _fetchPublicBlog = async (blog) => {
   return blog;
 };
 
-// Get full blog by slug — GET /api/blogs/:slug
+
 const getBlogBySlug = async ({ slug }) => {
   const blog = await prisma.blog.findUnique({
     where: { urlSlug: slug },
@@ -523,7 +515,7 @@ const getBlogBySlug = async ({ slug }) => {
   return _fetchPublicBlog(blog);
 };
 
-// Get full blog by ID — GET /api/blogs/:id (UUID)
+
 const getBlogById = async ({ blogId }) => {
   const blog = await prisma.blog.findUnique({
     where: { id: blogId },

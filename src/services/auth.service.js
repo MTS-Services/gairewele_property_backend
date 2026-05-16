@@ -137,17 +137,17 @@ const firebaseLogin = async ({ idToken, role, fullName, image }) => {
 
 const OTP_EXPIRY_MINUTES = 10;
 
-const generateOtp = () => String(crypto.randomInt(10000, 99999)); // always 5 digits
+const generateOtp = () => String(crypto.randomInt(10000, 99999)); 
 
 const forgotPassword = async ({ email }) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  // Don't reveal whether the email exists
+
   if (!user) return;
 
   const otp = generateOtp();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-  // Invalidate any previous unused OTPs for this email
+
   await prisma.otpToken.updateMany({
     where: { email, used: false },
     data: { used: true },
@@ -190,13 +190,11 @@ const verifyOtp = async ({ email, otp }) => {
   if (!record) throw new ApiError(400, "Invalid OTP");
   if (record.expiresAt < new Date()) throw new ApiError(400, "OTP has expired");
 
-  // Mark OTP as used now — cannot be reused
   await prisma.otpToken.update({
     where: { id: record.id },
     data: { used: true },
   });
 
-  // Issue a 15-minute reset token that carries the email
   const jwt = require("jsonwebtoken");
   const resetToken = jwt.sign(
     { email, purpose: "password_reset" },
@@ -207,9 +205,7 @@ const verifyOtp = async ({ email, otp }) => {
   return { resetToken };
 };
 
-// =====================
-// Reset Password — uses resetToken issued by verifyOtp
-// =====================
+
 const resetPassword = async ({ resetToken, newPassword, confirmPassword }) => {
   if (newPassword !== confirmPassword) {
     throw new ApiError(400, "Passwords do not match");

@@ -33,7 +33,6 @@ const VALID_APPROVAL_STATUSES = [
   "FEATURED",
 ];
 
-// Reusable include for property with images + owner
 const PROPERTY_INCLUDE = {
   images: { orderBy: { createdAt: "asc" } },
   owner: {

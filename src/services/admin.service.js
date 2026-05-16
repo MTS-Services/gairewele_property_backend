@@ -166,7 +166,7 @@ const getAllListings = async ({
     ];
   }
 
-  // Run main query and aggregate counts in parallel
+ 
   const [listings, total, listingsByCreatorRole, listingsByStatus] =
     await Promise.all([
       prisma.property.findMany({

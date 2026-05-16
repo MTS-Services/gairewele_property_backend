@@ -13,7 +13,7 @@ const AD_INCLUDE = {
   },
 };
 
-// Remove the file from disk if it lives under /uploads/ad/
+
 const removeAdFile = (imageUrl) => {
   if (!imageUrl) return;
   const filename = path.basename(imageUrl);
@@ -131,7 +131,7 @@ const adminGetAllAds = async ({
     }),
   ]);
 
-  // Compute live/expired/scheduled/paused for each ad
+ 
   const now = new Date();
   const decorated = ads.map((ad) => ({
     ...ad,
@@ -221,7 +221,6 @@ const updateAd = async ({
     data.endDate = newEnd;
   }
 
-  // Replace image if a new one was uploaded
   if (file) {
     data.image = adFileUrl(file.filename);
     removeAdFile(ad.image);
