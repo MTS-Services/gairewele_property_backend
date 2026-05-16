@@ -27,7 +27,6 @@ const startOrGetConversation = async (req, res, next) => {
   }
 };
 
-
 const getConversations = async (req, res, next) => {
   try {
     const data = await chatService.getConversations(req.user.id);
@@ -36,7 +35,6 @@ const getConversations = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const getConversationMessages = async (req, res, next) => {
   try {
@@ -51,12 +49,10 @@ const getConversationMessages = async (req, res, next) => {
   }
 };
 
-
 const sendMessage = async (req, res, next) => {
   try {
     const { id: conversationId } = req.params;
     const { content, mediaUrl, mediaType } = req.body;
-
 
     const resolvedMediaUrl = req.file
       ? chatFileUrl(req.file.filename)
@@ -83,7 +79,6 @@ const sendMessage = async (req, res, next) => {
   }
 };
 
-
 const uploadMedia = async (req, res, next) => {
   try {
     if (!req.file) throw new ApiError(400, "No file uploaded");
@@ -103,7 +98,6 @@ const uploadMedia = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const markAsRead = async (req, res, next) => {
   try {

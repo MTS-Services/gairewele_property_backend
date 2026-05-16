@@ -134,6 +134,7 @@ const getPublicProperties = async (req, res, next) => {
     const {
       search,
       approvalStatus,
+      size,
       propertyType,
       listingType,
       condition,
@@ -141,6 +142,7 @@ const getPublicProperties = async (req, res, next) => {
       minPrice,
       maxPrice,
       bedrooms,
+      sortBy,
       page,
       pageSize,
     } = req.query;
@@ -151,6 +153,7 @@ const getPublicProperties = async (req, res, next) => {
       filters: {
         search: search || null,
         approvalStatus: approvalStatus ? approvalStatus.toUpperCase() : null,
+        size: size || null,
         propertyType: propertyType ? propertyType.toUpperCase() : null,
         listingType: listingType ? listingType.toUpperCase() : null,
         condition: condition ? condition.toUpperCase() : null,
@@ -158,6 +161,7 @@ const getPublicProperties = async (req, res, next) => {
         minPrice: minPrice || null,
         maxPrice: maxPrice || null,
         bedrooms: bedrooms || null,
+        sortBy: sortBy || null,
       },
       page: parseInt(page, 10) || 1,
       pageSize: parseInt(pageSize, 10) || 10,

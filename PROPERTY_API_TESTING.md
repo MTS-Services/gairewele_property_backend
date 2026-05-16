@@ -76,76 +76,74 @@ Content-Type: `multipart/form-data`
 
 **cURL Example:**
 
-
-
 {
-  "title": "Modern 3 Bedroom Apartment in Lagos",
-  "description": "A spacious and modern apartment with excellent finishing, located in a secure and peaceful area.",
-  "propertyType": "APARTMENT",
-  "condition": "NEW",
-  "size": "120 sqm",
-  "listingType": "FOR_SALE",
-  "location": "Lekki, Lagos",
-  "propertyAddress": "Plot 24, Admiralty Way, Lekki Phase 1, Lagos",
-  "askingPrice": 5000000,
-  "videoUrl": "https://www.youtube.com/watch?v=example1",
-  "whatsappNumber": "+2348012345678",
-  "companyName": "Prime Homes Realty",
-  "officeAddress": "12 Admiralty Road, Lekki, Lagos",
-  "phoneNumber": "+2348098765432"
+"title": "Modern 3 Bedroom Apartment in Lagos",
+"description": "A spacious and modern apartment with excellent finishing, located in a secure and peaceful area.",
+"propertyType": "APARTMENT",
+"condition": "NEW",
+"size": "120 sqm",
+"listingType": "FOR_SALE",
+"location": "Lekki, Lagos",
+"propertyAddress": "Plot 24, Admiralty Way, Lekki Phase 1, Lagos",
+"askingPrice": 5000000,
+"videoUrl": "https://www.youtube.com/watch?v=example1",
+"whatsappNumber": "+2348012345678",
+"companyName": "Prime Homes Realty",
+"officeAddress": "12 Admiralty Road, Lekki, Lagos",
+"phoneNumber": "+2348098765432"
 }
 
 {
-  "title": "Beautiful 4 Bedroom House for Rent",
-  "description": "Well-maintained family house with parking space, fitted kitchen, and spacious rooms.",
-  "propertyType": "HOUSE",
-  "condition": "RENOVATED",
-  "size": "250 sqm",
-  "listingType": "FOR_RENT",
-  "location": "Abuja",
-  "propertyAddress": "House 18, Gwarinpa Estate, Abuja",
-  "askingPrice": 1200000,
-  "videoUrl": "https://www.youtube.com/watch?v=example2",
-  "whatsappNumber": "+2348023456789",
-  "companyName": "Urban Shelter Properties",
-  "officeAddress": "Gwarinpa Main Road, Abuja",
-  "phoneNumber": "+2348034567890"
-}
-
-
-{
-  "title": "Commercial Office Space Available for Lease",
-  "description": "Fully serviced office space suitable for startups, agencies, and corporate businesses.",
-  "propertyType": "OFFICE_SPACE",
-  "condition": "FAIRLY_USED",
-  "size": "180 sqm",
-  "listingType": "FOR_LEASE",
-  "location": "Ikeja, Lagos",
-  "propertyAddress": "3rd Floor, Allen Avenue Business Plaza, Ikeja, Lagos",
-  "askingPrice": 3500000,
-  "videoUrl": "https://www.youtube.com/watch?v=example4",
-  "whatsappNumber": "+2348067890123",
-  "companyName": "Corporate Space Nigeria",
-  "officeAddress": "Allen Avenue, Ikeja, Lagos",
-  "phoneNumber": "+2348078901234"
+"title": "Beautiful 4 Bedroom House for Rent",
+"description": "Well-maintained family house with parking space, fitted kitchen, and spacious rooms.",
+"propertyType": "HOUSE",
+"condition": "RENOVATED",
+"size": "250 sqm",
+"listingType": "FOR_RENT",
+"location": "Abuja",
+"propertyAddress": "House 18, Gwarinpa Estate, Abuja",
+"askingPrice": 1200000,
+"videoUrl": "https://www.youtube.com/watch?v=example2",
+"whatsappNumber": "+2348023456789",
+"companyName": "Urban Shelter Properties",
+"officeAddress": "Gwarinpa Main Road, Abuja",
+"phoneNumber": "+2348034567890"
 }
 
 {
-  "title": "Affordable Studio Apartment for Rent",
-  "description": "Clean and affordable studio apartment suitable for students, singles, or young professionals.",
-  "propertyType": "STUDIO",
-  "condition": "FAIRLY_USED",
-  "size": "45 sqm",
-  "listingType": "FOR_RENT",
-  "location": "Yaba, Lagos",
-  "propertyAddress": "No. 8 Herbert Macaulay Way, Yaba, Lagos",
-  "askingPrice": 450000,
-  "videoUrl": "",
-  "whatsappNumber": "+2348089012345",
-  "companyName": "EasyRent Properties",
-  "officeAddress": "Yaba Tech Road, Lagos",
-  "phoneNumber": "+2348090123456"
+"title": "Commercial Office Space Available for Lease",
+"description": "Fully serviced office space suitable for startups, agencies, and corporate businesses.",
+"propertyType": "OFFICE_SPACE",
+"condition": "FAIRLY_USED",
+"size": "180 sqm",
+"listingType": "FOR_LEASE",
+"location": "Ikeja, Lagos",
+"propertyAddress": "3rd Floor, Allen Avenue Business Plaza, Ikeja, Lagos",
+"askingPrice": 3500000,
+"videoUrl": "https://www.youtube.com/watch?v=example4",
+"whatsappNumber": "+2348067890123",
+"companyName": "Corporate Space Nigeria",
+"officeAddress": "Allen Avenue, Ikeja, Lagos",
+"phoneNumber": "+2348078901234"
 }
+
+{
+"title": "Affordable Studio Apartment for Rent",
+"description": "Clean and affordable studio apartment suitable for students, singles, or young professionals.",
+"propertyType": "STUDIO",
+"condition": "FAIRLY_USED",
+"size": "45 sqm",
+"listingType": "FOR_RENT",
+"location": "Yaba, Lagos",
+"propertyAddress": "No. 8 Herbert Macaulay Way, Yaba, Lagos",
+"askingPrice": 450000,
+"videoUrl": "",
+"whatsappNumber": "+2348089012345",
+"companyName": "EasyRent Properties",
+"officeAddress": "Yaba Tech Road, Lagos",
+"phoneNumber": "+2348090123456"
+}
+
 ```bash
 curl -X POST https://backend.property-file.com/api/properties \
   -H "Authorization: Bearer <AGENT_TOKEN>" \
@@ -203,14 +201,22 @@ curl -X POST https://backend.property-file.com/api/properties \
 | location | `?location=Lagos` |
 | minPrice | `?minPrice=5000000` |
 | maxPrice | `?maxPrice=50000000` |
+| sortBy | `?sortBy=Price: High to Low` |
 | page | `?page=2` |
+
+Supported `sortBy` values:
+
+- `Newest Listed` or `newest_listed`
+- `Price: High to Low` or `price_high_to_low`
+- `Price: Low to High` or `price_low_to_high`
+- `Oldest Listed` or `oldest_listed`
 
 Returns only `PUBLISHED` and `FEATURED` properties. Featured appear first.
 
 **cURL Example:**
 
 ```bash
-curl "https://backend.property-file.com/api/properties?location=Lagos&listingType=FOR_SALE&page=1"
+curl "https://backend.property-file.com/api/properties?location=Lagos&listingType=FOR_SALE&sortBy=price_high_to_low&page=1"
 ```
 
 **Success Response (200):**
@@ -361,10 +367,7 @@ Content-Type: `application/json`
 | `FEATURED`     | Feature (top placement)  |
 | `PENDING`      | Reset to pending         |
 
-
-
 9.  {{baseUrl}}/api/properties/{{propertyId}}/gallery/{{imageId}}
-
 
 **cURL Examples:**
 

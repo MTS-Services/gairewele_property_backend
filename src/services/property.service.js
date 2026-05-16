@@ -4,6 +4,34 @@ const { getPlan } = require("../config/plans");
 const { ensureSubscription } = require("./subscription.service");
 
 const ALLOWED_ROLES = ["AGENT", "DEVELOPER", "OWNER"];
+const VALID_PROPERTY_TYPES = [
+  "APARTMENT",
+  "HOUSE",
+  "VILLA",
+  "PENTHOUSE",
+  "STUDIO",
+  "TOWNHOUSE",
+  "DETACHED",
+  "SEMI_DETACHED",
+  "TERRACE",
+  "FLAT",
+  "OFFICE_SPACE",
+  "OTHERS",
+];
+const VALID_CONDITIONS = [
+  "NEW",
+  "RENOVATED",
+  "FAIRLY_USED",
+  "UNDER_CONSTRUCTION",
+  "OFF_PLAN",
+];
+const VALID_LISTING_TYPES = ["FOR_SALE", "FOR_RENT", "FOR_LEASE", "OTHERS"];
+const VALID_APPROVAL_STATUSES = [
+  "PENDING",
+  "PUBLISHED",
+  "REJECTED",
+  "FEATURED",
+];
 
 // Reusable include for property with images + owner
 const PROPERTY_INCLUDE = {
@@ -20,6 +48,79 @@ const PROPERTY_INCLUDE = {
       whatsappNumber: true,
     },
   },
+};
+
+const parsePropertySize = (size) => {
+  const parsedSize = parseInt(size, 10);
+  if (Number.isNaN(parsedSize) || parsedSize < 0) {
+    throw new ApiError(400, "size must be a valid non-negative integer");
+  }
+  return parsedSize;
+};
+
+const normalizeSortBy = (sortBy) => {
+  if (!sortBy) return "newest_listed";
+
+  const normalized = String(sortBy)
+    .trim()
+    .toLowerCase()
+    .replace(/[:\s]+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+  if (
+    ["newest", "newest_listed", "latest", "latest_listed"].includes(normalized)
+  ) {
+    return "newest_listed";
+  }
+
+  if (["oldest", "oldest_listed"].includes(normalized)) {
+    return "oldest_listed";
+  }
+
+  if (
+    [
+      "price_high_to_low",
+      "high_to_low",
+      "price_desc",
+      "highest_price",
+    ].includes(normalized)
+  ) {
+    return "price_high_to_low";
+  }
+
+  if (
+    ["price_low_to_high", "low_to_high", "price_asc", "lowest_price"].includes(
+      normalized,
+    )
+  ) {
+    return "price_low_to_high";
+  }
+
+  return "newest_listed";
+};
+
+const getPublicPropertyOrderBy = (sortBy) => {
+  switch (normalizeSortBy(sortBy)) {
+    case "oldest_listed":
+      return { createdAt: "asc" };
+    case "price_high_to_low":
+      return { askingPrice: "desc" };
+    case "price_low_to_high":
+      return { askingPrice: "asc" };
+    case "newest_listed":
+    default:
+      return { createdAt: "desc" };
+  }
+};
+
+const validateEnumFilter = (field, value, validValues) => {
+  if (!value) return;
+  if (!validValues.includes(value)) {
+    throw new ApiError(
+      400,
+      `Invalid ${field}. Valid values: ${validValues.join(", ")}`,
+    );
+  }
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -68,44 +169,23 @@ const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
     );
   }
 
-  const validPropertyTypes = [
-    "APARTMENT",
-    "HOUSE",
-    "VILLA",
-    "PENTHOUSE",
-    "STUDIO",
-    "TOWNHOUSE",
-    "DETACHED",
-    "SEMI_DETACHED",
-    "TERRACE",
-    "FLAT",
-    "OFFICE_SPACE",
-    "OTHERS",
-  ];
-  const validConditions = [
-    "NEW",
-    "RENOVATED",
-    "FAIRLY_USED",
-    "UNDER_CONSTRUCTION",
-    "OFF_PLAN",
-  ];
-  const validListingTypes = ["FOR_SALE", "FOR_RENT", "FOR_LEASE", "OTHERS"];
+  if (!VALID_PROPERTY_TYPES.includes(propertyType))
+    throw new ApiError(
+      400,
+      `Invalid propertyType. Valid values: ${VALID_PROPERTY_TYPES.join(", ")}`,
+    );
+  if (!VALID_CONDITIONS.includes(condition))
+    throw new ApiError(
+      400,
+      `Invalid condition. Valid values: ${VALID_CONDITIONS.join(", ")}`,
+    );
+  if (!VALID_LISTING_TYPES.includes(listingType))
+    throw new ApiError(
+      400,
+      `Invalid listingType. Valid values: ${VALID_LISTING_TYPES.join(", ")}`,
+    );
 
-  if (!validPropertyTypes.includes(propertyType))
-    throw new ApiError(
-      400,
-      `Invalid propertyType. Valid values: ${validPropertyTypes.join(", ")}`,
-    );
-  if (!validConditions.includes(condition))
-    throw new ApiError(
-      400,
-      `Invalid condition. Valid values: ${validConditions.join(", ")}`,
-    );
-  if (!validListingTypes.includes(listingType))
-    throw new ApiError(
-      400,
-      `Invalid listingType. Valid values: ${validListingTypes.join(", ")}`,
-    );
+  const parsedSize = parsePropertySize(size);
 
   // ── Plan limits enforcement ───────────────────────────────────
   const sub = await ensureSubscription(ownerId);
@@ -141,7 +221,7 @@ const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
       description,
       propertyType,
       condition,
-      size,
+      size: parsedSize,
       propertyTitle: listingType,
       listingType,
       location,
@@ -200,6 +280,9 @@ const updateProperty = async ({
   const updateData = {};
   for (const key of allowedFields) {
     if (data[key] !== undefined) updateData[key] = data[key];
+  }
+  if (data.size !== undefined) {
+    updateData.size = parsePropertySize(data.size);
   }
   if (data.listingType) updateData.propertyTitle = data.listingType;
   updateData.approvalStatus = "PENDING";
@@ -295,6 +378,19 @@ const getPublicProperties = async ({
 }) => {
   const where = {};
 
+  validateEnumFilter(
+    "propertyType",
+    filters.propertyType,
+    VALID_PROPERTY_TYPES,
+  );
+  validateEnumFilter("listingType", filters.listingType, VALID_LISTING_TYPES);
+  validateEnumFilter("condition", filters.condition, VALID_CONDITIONS);
+  validateEnumFilter(
+    "approvalStatus",
+    filters.approvalStatus,
+    VALID_APPROVAL_STATUSES,
+  );
+
   if (filters.approvalStatus) {
     where.approvalStatus = filters.approvalStatus;
   } else {
@@ -304,6 +400,8 @@ const getPublicProperties = async ({
   // Title search
   if (filters.search)
     where.title = { contains: filters.search, mode: "insensitive" };
+
+  if (filters.size) where.size = parsePropertySize(filters.size);
 
   if (filters.propertyType) where.propertyType = filters.propertyType;
   if (filters.listingType) where.listingType = filters.listingType;
@@ -330,7 +428,7 @@ const getPublicProperties = async ({
   const [properties, total] = await Promise.all([
     prisma.property.findMany({
       where,
-      orderBy: [{ approvalStatus: "desc" }, { createdAt: "desc" }],
+      orderBy: getPublicPropertyOrderBy(filters.sortBy),
       skip: (page - 1) * pageSize,
       take: pageSize,
       include: {
