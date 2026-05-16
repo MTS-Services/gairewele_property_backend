@@ -2,8 +2,14 @@ const subscriptionService = require("../services/subscription.service");
 const { success } = require("../utils/response");
 const PDFDocument = require("pdfkit");
 
-const listPlans = (_req, res) =>
-  success(res, { plans: subscriptionService.listPlans() }, "Plans fetched");
+const listPlans = async (_req, res, next) => {
+  try {
+    const plans = await subscriptionService.listPlans();
+    success(res, { plans }, "Plans fetched");
+  } catch (err) {
+    next(err);
+  }
+};
 
 const getMySubscription = async (req, res, next) => {
   try {

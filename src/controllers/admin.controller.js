@@ -1,5 +1,6 @@
 const adminService = require("../services/admin.service");
 const subscriptionService = require("../services/subscription.service");
+const planFeaturesService = require("../services/planFeatures.service");
 const { success } = require("../utils/response");
 
 const csvEscape = (value) => {
@@ -189,6 +190,44 @@ const exportPaymentsCsv = async (req, res, next) => {
   }
 };
 
+// GET /admin/plans — list all plans with current DB-backed feature limits
+const getPlanFeatures = async (_req, res, next) => {
+  try {
+    const plans = await planFeaturesService.getAllPlanFeatures();
+    success(res, { plans }, "Plan features fetched");
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PATCH /admin/plans/:plan — update editable feature limits for a plan
+const updatePlanFeatures = async (req, res, next) => {
+  try {
+    const { plan } = req.params;
+    const { maxListings, maxImagesPerListing, videoPerListing } = req.body;
+
+    // Parse values: front-end may send strings or nulls
+    const parsed = {};
+    if (maxListings !== undefined)
+      parsed.maxListings =
+        maxListings === null || maxListings === ""
+          ? null
+          : parseInt(maxListings, 10);
+    if (maxImagesPerListing !== undefined)
+      parsed.maxImagesPerListing = parseInt(maxImagesPerListing, 10);
+    if (videoPerListing !== undefined)
+      parsed.videoPerListing = parseInt(videoPerListing, 10);
+
+    const updated = await planFeaturesService.updatePlanFeatures(
+      plan.toUpperCase(),
+      parsed,
+    );
+    success(res, { plan: updated }, "Plan features updated");
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAllUsers,
   exportUsersCsv,
@@ -196,4 +235,6 @@ module.exports = {
   toggleSuspendUser,
   getAllListings,
   exportPaymentsCsv,
+  getPlanFeatures,
+  updatePlanFeatures,
 };

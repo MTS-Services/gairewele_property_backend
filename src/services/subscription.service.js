@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 const { PLANS, SUBSCRIBABLE_ROLES, getPlan } = require("../config/plans");
+const { getEffectivePlanFeatures } = require("./planFeatures.service");
 const paystack = require("../utils/paystack");
 
 // Ensure user has a subscription row. Creates a FREE one if missing.
@@ -15,15 +16,21 @@ const ensureSubscription = async (userId) => {
   return sub;
 };
 
-// Public: list available plans for the UI (with features + paystack info hidden).
-const listPlans = () =>
-  Object.values(PLANS).map((p) => ({
-    key: p.key,
-    name: p.name,
-    price: p.price,
-    currency: p.currency,
-    features: p.features,
-  }));
+// Public: list available plans with DB-backed feature limits.
+const listPlans = async () => {
+  const results = [];
+  for (const p of Object.values(PLANS)) {
+    const features = await getEffectivePlanFeatures(p.key);
+    results.push({
+      key: p.key,
+      name: p.name,
+      price: p.price,
+      currency: p.currency,
+      features,
+    });
+  }
+  return results;
+};
 
 // Get the logged-in user's current subscription + plan details.
 const getMySubscription = async ({ userId, role }) => {

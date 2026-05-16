@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 const { getPlan } = require("../config/plans");
+const { getEffectivePlanFeatures } = require("./planFeatures.service");
 const { ensureSubscription } = require("./subscription.service");
 
 const ALLOWED_ROLES = ["AGENT", "DEVELOPER", "OWNER"];
@@ -186,31 +187,31 @@ const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
 
   const parsedSize = parsePropertySize(size);
 
-  // ── Plan limits enforcement ───────────────────────────────────
+  // ── Plan limits enforcement (DB-backed; admin can edit these) ──
   const sub = await ensureSubscription(ownerId);
-  const plan = getPlan(sub.plan) || getPlan("FREE");
+  const features = await getEffectivePlanFeatures(sub.plan || "FREE");
 
-  if (plan.features.maxListings !== null) {
+  if (features.maxListings !== null) {
     const currentCount = await prisma.property.count({ where: { ownerId } });
-    if (currentCount >= plan.features.maxListings) {
+    if (currentCount >= features.maxListings) {
       throw new ApiError(
         403,
-        `Your ${plan.name} plan allows only ${plan.features.maxListings} listings. Upgrade to add more.`,
+        `Your ${features.planName} plan allows only ${features.maxListings} listings. Upgrade to add more.`,
       );
     }
   }
 
-  if (imageUrls.length > plan.features.maxImagesPerListing) {
+  if (imageUrls.length > features.maxImagesPerListing) {
     throw new ApiError(
       403,
-      `Your ${plan.name} plan allows only ${plan.features.maxImagesPerListing} images per listing.`,
+      `Your ${features.planName} plan allows only ${features.maxImagesPerListing} images per listing.`,
     );
   }
 
-  if (videoUrl && plan.features.videoPerListing < 1) {
+  if (videoUrl && features.videoPerListing < 1) {
     throw new ApiError(
       403,
-      `Your ${plan.name} plan does not allow video uploads. Upgrade to add a video.`,
+      `Your ${features.planName} plan does not allow video uploads. Upgrade to add a video.`,
     );
   }
 

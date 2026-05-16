@@ -6,6 +6,7 @@ const path = require("path");
 
 const routes = require("./routes");
 const { errorHandler, notFound } = require("./middleware/error");
+const { seedDefaultPlanFeatures } = require("./services/planFeatures.service");
 
 const app = express();
 
@@ -33,6 +34,11 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api", routes);
+
+// Seed plan feature defaults into DB (no-op if rows already exist)
+seedDefaultPlanFeatures().catch((err) =>
+  console.error("Failed to seed plan features:", err),
+);
 
 app.use(notFound);
 app.use(errorHandler);

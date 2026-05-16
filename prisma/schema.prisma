@@ -371,3 +371,12 @@ model Message {
 
   @@index([conversationId])
 }
+
+model PlanFeature {
+  id                  String           @id @default(uuid())
+  plan                SubscriptionPlan @unique
+  maxListings         Int?             // null = unlimited
+  maxImagesPerListing Int
+  videoPerListing     Int
+  updatedAt           DateTime         @updatedAt
+}
