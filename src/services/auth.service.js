@@ -58,7 +58,6 @@ const register = async ({
     },
   });
 
-  // Auto-create FREE subscription for professional roles
   if (PROFESSIONAL_ROLES.includes(assignedRole)) {
     await prisma.subscription.create({
       data: { userId: user.id, plan: "FREE", isActive: true },

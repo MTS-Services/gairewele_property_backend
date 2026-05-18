@@ -48,16 +48,16 @@ const getAgentDashboard = async ({ userId }) => {
         approvalStatus: { in: ["PUBLISHED", "FEATURED"] },
       },
     }),
-    // Pending admin approval
+  
     prisma.property.count({
       where: { ownerId: userId, approvalStatus: "PENDING" },
     }),
-    // Subscription status
+   
     prisma.subscription.findUnique({
       where: { userId },
       select: { plan: true, isActive: true, endDate: true },
     }),
-    // Recent listings for the table
+   
     prisma.property.findMany({
       where: { ownerId: userId },
       orderBy: { createdAt: "desc" },
