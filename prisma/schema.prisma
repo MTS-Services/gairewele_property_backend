@@ -76,6 +76,8 @@ enum AdPlacement {
   BLOG
   PROPERTIES
   REGISTER
+  PROPERTY_DETAILS
+  BLOG_DETAILS
 }
 
 enum AdStatus {

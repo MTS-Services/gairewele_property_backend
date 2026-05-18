@@ -4,7 +4,14 @@ const { adFileUrl } = require("../middleware/adUpload");
 const path = require("path");
 const fs = require("fs");
 
-const VALID_PLACEMENTS = ["HOMEPAGE", "BLOG", "PROPERTIES", "REGISTER"];
+const VALID_PLACEMENTS = [
+  "HOMEPAGE",
+  "BLOG",
+  "PROPERTIES",
+  "REGISTER",
+  "PROPERTY_DETAILS",
+  "BLOG_DETAILS",
+];
 const VALID_STATUSES = ["SPONSOR", "FEATURED", "STANDARD"];
 
 const AD_INCLUDE = {
@@ -12,7 +19,6 @@ const AD_INCLUDE = {
     select: { id: true, fullName: true, email: true, role: true },
   },
 };
-
 
 const removeAdFile = (imageUrl) => {
   if (!imageUrl) return;
@@ -131,7 +137,6 @@ const adminGetAllAds = async ({
     }),
   ]);
 
- 
   const now = new Date();
   const decorated = ads.map((ad) => ({
     ...ad,
