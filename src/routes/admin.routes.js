@@ -9,18 +9,28 @@ const {
   exportPaymentsCsv,
   getPlanFeatures,
   updatePlanFeatures,
+  createSubAdmin,
+  deleteSubAdmin,
 } = require("../controllers/admin.controller");
 
-router.use(authenticate, authorize("ADMIN"));
+const superAdmin = [authenticate, authorize("ADMIN")];
 
-router.get("/users", getAllUsers);
-router.get("/users/export", exportUsersCsv);
-router.get("/users/:id", getUserById);
-router.patch("/users/:id/toggle-suspend", toggleSuspendUser);
-router.get("/listings", getAllListings);
-router.get("/payments/export", exportPaymentsCsv);
+const listingAdmin = [authenticate, authorize("ADMIN", "SUB_ADMIN_LISTING")];
 
-router.get("/plans", getPlanFeatures);
-router.patch("/plans/:plan", updatePlanFeatures);
+// Users
+router.get("/users", ...superAdmin, getAllUsers);
+router.get("/users/export", ...superAdmin, exportUsersCsv);
+router.get("/users/:id", ...superAdmin, getUserById);
+router.patch("/users/:id/toggle-suspend", ...superAdmin, toggleSuspendUser);
+
+router.get("/listings", ...listingAdmin, getAllListings);
+
+router.get("/payments/export", ...superAdmin, exportPaymentsCsv);
+
+router.get("/plans", ...superAdmin, getPlanFeatures);
+router.patch("/plans/:plan", ...superAdmin, updatePlanFeatures);
+
+router.post("/sub-admins", ...superAdmin, createSubAdmin);
+router.delete("/sub-admins/:id", ...superAdmin, deleteSubAdmin);
 
 module.exports = router;

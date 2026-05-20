@@ -1,6 +1,7 @@
 const adminService = require("../services/admin.service");
 const subscriptionService = require("../services/subscription.service");
 const planFeaturesService = require("../services/planFeatures.service");
+const ApiError = require("../utils/ApiError");
 const { success } = require("../utils/response");
 
 const csvEscape = (value) => {
@@ -228,6 +229,51 @@ const updatePlanFeatures = async (req, res, next) => {
   }
 };
 
+// POST /admin/sub-admins — super admin creates a sub-admin
+const createSubAdmin = async (req, res, next) => {
+  try {
+    const { fullName, email, password, role } = req.body;
+    if (!fullName || !email || !password || !role) {
+      throw new ApiError(
+        400,
+        "fullName, email, password and role are required",
+      );
+    }
+    const user = await adminService.createSubAdmin({
+      fullName,
+      email,
+      password,
+      role,
+    });
+    success(res, { user }, "Sub-admin created", 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /admin/sub-admins — list all sub-admins
+const getSubAdmins = async (_req, res, next) => {
+  try {
+    const subAdmins = await adminService.getSubAdmins();
+    success(res, { subAdmins }, "Sub-admins fetched");
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /admin/sub-admins/:id — revoke sub-admin access
+const deleteSubAdmin = async (req, res, next) => {
+  try {
+    await adminService.deleteSubAdmin({
+      userId: req.params.id,
+      adminId: req.user.id,
+    });
+    success(res, null, "Sub-admin removed");
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAllUsers,
   exportUsersCsv,
@@ -237,4 +283,7 @@ module.exports = {
   exportPaymentsCsv,
   getPlanFeatures,
   updatePlanFeatures,
+  createSubAdmin,
+  getSubAdmins,
+  deleteSubAdmin,
 };
