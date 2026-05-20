@@ -14,6 +14,9 @@ enum Role {
   AGENT
   DEVELOPER
   OWNER
+  SUB_ADMIN_LISTING
+  SUB_ADMIN_BLOG
+  SUB_ADMIN_ADVERTS
 }
 
 enum AuthProvider {

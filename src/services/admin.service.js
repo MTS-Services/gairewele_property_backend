@@ -1,8 +1,22 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
+const bcrypt = require("bcryptjs");
 
+const SUB_ADMIN_ROLES = [
+  "SUB_ADMIN_LISTING",
+  "SUB_ADMIN_BLOG",
+  "SUB_ADMIN_ADVERTS",
+];
 const VALID_ROLES = ["USER", "ADMIN", "AGENT", "DEVELOPER", "OWNER"];
-const NON_ADMIN_ROLES = VALID_ROLES.filter((r) => r !== "ADMIN");
+// All roles visible in the users list (excludes only ADMIN/super-admin)
+const ALL_LISTABLE_ROLES = [
+  "USER",
+  "AGENT",
+  "DEVELOPER",
+  "OWNER",
+  ...SUB_ADMIN_ROLES,
+];
+const NON_ADMIN_ROLES = ["USER", "AGENT", "DEVELOPER", "OWNER"];
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -11,13 +25,13 @@ const sanitizeUser = (user) => {
 };
 
 const buildUsersWhereClause = ({ role, search }) => {
-  const where = { role: { in: NON_ADMIN_ROLES } };
+  const where = { role: { in: ALL_LISTABLE_ROLES } };
 
   if (role) {
-    if (!NON_ADMIN_ROLES.includes(role)) {
+    if (!ALL_LISTABLE_ROLES.includes(role)) {
       throw new ApiError(
         400,
-        `Invalid role. Valid: ${NON_ADMIN_ROLES.join(", ")}`,
+        `Invalid role. Valid: ${ALL_LISTABLE_ROLES.join(", ")}`,
       );
     }
     where.role = role;
@@ -48,12 +62,12 @@ const getAllUsers = async ({ role, search, page = 1, pageSize = 20 }) => {
     prisma.user.count({ where }),
     prisma.user.groupBy({
       by: ["role"],
-      where: { role: { in: NON_ADMIN_ROLES } },
+      where: { role: { in: ALL_LISTABLE_ROLES } },
       _count: { _all: true },
     }),
   ]);
 
-  const countsByRole = NON_ADMIN_ROLES.reduce((acc, r) => {
+  const countsByRole = ALL_LISTABLE_ROLES.reduce((acc, r) => {
     acc[r] = 0;
     return acc;
   }, {});
@@ -166,7 +180,6 @@ const getAllListings = async ({
     ];
   }
 
- 
   const [listings, total, listingsByCreatorRole, listingsByStatus] =
     await Promise.all([
       prisma.property.findMany({
@@ -211,10 +224,53 @@ const getAllListings = async ({
   };
 };
 
+// ── Sub-admin management (ADMIN / super-admin only) ───────────────────────────
+
+const createSubAdmin = async ({ fullName, email, password, role }) => {
+  if (!SUB_ADMIN_ROLES.includes(role)) {
+    throw new ApiError(
+      400,
+      `Invalid sub-admin role. Valid: ${SUB_ADMIN_ROLES.join(", ")}`,
+    );
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) throw new ApiError(409, "Email already registered");
+
+  const hashed = await bcrypt.hash(password, 10);
+  const user = await prisma.user.create({
+    data: { fullName, email, password: hashed, role },
+  });
+  return sanitizeUser(user);
+};
+
+const getSubAdmins = async () => {
+  const users = await prisma.user.findMany({
+    where: { role: { in: SUB_ADMIN_ROLES } },
+    orderBy: { createdAt: "desc" },
+  });
+  return users.map(sanitizeUser);
+};
+
+const deleteSubAdmin = async ({ userId, adminId }) => {
+  if (userId === adminId)
+    throw new ApiError(400, "Cannot delete your own account");
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new ApiError(404, "Sub-admin not found");
+  if (!SUB_ADMIN_ROLES.includes(user.role))
+    throw new ApiError(400, "User is not a sub-admin");
+
+  await prisma.user.delete({ where: { id: userId } });
+};
+
 module.exports = {
   getAllUsers,
   getUsersForExport,
   getUserById,
   toggleSuspendUser,
   getAllListings,
+  createSubAdmin,
+  getSubAdmins,
+  deleteSubAdmin,
 };
