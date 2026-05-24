@@ -14,7 +14,6 @@ router.post("/firebase-login", authController.firebaseLogin);
 router.get("/me", authenticate, authController.me);
 router.post("/logout", authenticate, authController.logout);
 
-
 router.patch(
   "/profile",
   authenticate,
