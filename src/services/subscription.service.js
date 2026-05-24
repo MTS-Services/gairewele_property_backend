@@ -364,7 +364,7 @@ const getBillingHistoryForPdf = async ({ userId, role }) => {
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
-        reference: true,
+        reference: true, 
         plan: true,
         amount: true,
         currency: true,
