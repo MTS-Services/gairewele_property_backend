@@ -1,7 +1,6 @@
 const blogService = require("../services/blog.service");
 const { success } = require("../utils/response");
 
-
 const getBlogStats = async (req, res, next) => {
   try {
     const data = await blogService.getBlogStats();
@@ -11,12 +10,11 @@ const getBlogStats = async (req, res, next) => {
   }
 };
 
-
 const adminGetAllBlogs = async (req, res, next) => {
   try {
     const { category, status, search, page, pageSize } = req.query;
     const data = await blogService.adminGetAllBlogs({
-      category: category ? category.toUpperCase() : null,
+      category: category || null,
       status: status ? status.toUpperCase() : null,
       search: search || null,
       page: parseInt(page, 10) || 1,
@@ -28,7 +26,6 @@ const adminGetAllBlogs = async (req, res, next) => {
   }
 };
 
-
 const getAdminBlogById = async (req, res, next) => {
   try {
     const data = await blogService.getAdminBlogById({ blogId: req.params.id });
@@ -37,7 +34,6 @@ const getAdminBlogById = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const createBlog = async (req, res, next) => {
   try {
@@ -67,7 +63,7 @@ const createBlog = async (req, res, next) => {
       content,
       metaDescription,
       urlSlug,
-      category: category ? category.toUpperCase() : null,
+      category: category || null,
       tags,
       authorName,
       pdfTitle,
@@ -81,7 +77,6 @@ const createBlog = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const updateBlog = async (req, res, next) => {
   try {
@@ -112,7 +107,7 @@ const updateBlog = async (req, res, next) => {
       content,
       metaDescription,
       urlSlug,
-      category: category ? category.toUpperCase() : undefined,
+      category: category === undefined ? undefined : category,
       tags,
       authorName,
       pdfTitle,
@@ -126,7 +121,6 @@ const updateBlog = async (req, res, next) => {
   }
 };
 
-
 const deleteBlog = async (req, res, next) => {
   try {
     const data = await blogService.deleteBlog({ blogId: req.params.id });
@@ -135,7 +129,6 @@ const deleteBlog = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const deleteBlogImage = async (req, res, next) => {
   try {
@@ -172,12 +165,11 @@ const setBlogStatus = async (req, res, next) => {
   }
 };
 
-
 const getPublicBlogs = async (req, res, next) => {
   try {
     const { category, search, tag, page, pageSize } = req.query;
     const data = await blogService.getPublicBlogs({
-      category: category ? category.toUpperCase() : null,
+      category: category || null,
       search: search || null,
       tag: tag || null,
       page: parseInt(page, 10) || 1,
@@ -189,7 +181,6 @@ const getPublicBlogs = async (req, res, next) => {
   }
 };
 
-
 const getBlogBySlug = async (req, res, next) => {
   try {
     const data = await blogService.getBlogBySlug({ slug: req.params.slug });
@@ -198,7 +189,6 @@ const getBlogBySlug = async (req, res, next) => {
     next(err);
   }
 };
-
 
 const getBlogById = async (req, res, next) => {
   try {

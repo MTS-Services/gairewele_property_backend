@@ -6,17 +6,59 @@ const {
   removeFile,
 } = require("../middleware/blogUpload");
 
-const VALID_CATEGORIES = [
-  "BUY",
-  "RENT",
-  "INVEST",
-  "MARKET_NEWS",
-  "GUIDES",
-  "DESIGN_LIFESTYLE",
-  "LEGAL",
-  "COMMERCIAL",
-];
+const CATEGORY_ENUM_TO_LABEL = {
+  POLICY_REGULATION: "Policy & Regulation",
+  PROPERTY_NEWS: "Property News",
+  OPINION_COMMENTARY: "Opinion & Commentary",
+  PROPERTY_INVESTMENT: "Property Investment",
+  MARKET_ANALYSIS: "Market Analysis",
+  DEVELOPERS_DEVELOPMENT: "Developers & Development",
+  PROPERTY_LAW: "Property Law",
+  FRAUD_ALERTS: "Fraud Alerts",
+  PROPERTY_DISPUTES: "Property Disputes",
+  NEWS: "News",
+  LANDLORD_TENANTS: "Landlord & Tenants",
+  MARKET_TRENDS: "Market Trends",
+};
+const VALID_CATEGORIES = Object.keys(CATEGORY_ENUM_TO_LABEL);
 const VALID_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+
+const normalizeToken = (value) =>
+  String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const CATEGORY_LOOKUP = (() => {
+  const lookup = new Map();
+  for (const [enumValue, label] of Object.entries(CATEGORY_ENUM_TO_LABEL)) {
+    lookup.set(enumValue, enumValue);
+    lookup.set(enumValue.toLowerCase(), enumValue);
+    lookup.set(normalizeToken(enumValue), enumValue);
+
+    lookup.set(label, enumValue);
+    lookup.set(label.toLowerCase(), enumValue);
+    lookup.set(normalizeToken(label), enumValue);
+  }
+  return lookup;
+})();
+
+const normalizeCategory = (value) => {
+  if (value === undefined || value === null) return value;
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  return (
+    CATEGORY_LOOKUP.get(raw) ||
+    CATEGORY_LOOKUP.get(raw.toLowerCase()) ||
+    CATEGORY_LOOKUP.get(normalizeToken(raw)) ||
+    null
+  );
+};
+
+const validCategoriesMessage = () =>
+  `Invalid category. Valid: ${Object.values(CATEGORY_ENUM_TO_LABEL).join(", ")}`;
 
 // ─────────────────────────────────────────────────────────────────
 // HELPERS
@@ -83,11 +125,8 @@ const createBlog = async ({
 }) => {
   if (!title) throw new ApiError(400, "title is required");
   if (!content) throw new ApiError(400, "content is required");
-  if (!category || !VALID_CATEGORIES.includes(category))
-    throw new ApiError(
-      400,
-      `Invalid category. Valid: ${VALID_CATEGORIES.join(", ")}`,
-    );
+  const normalizedCategory = normalizeCategory(category);
+  if (!normalizedCategory) throw new ApiError(400, validCategoriesMessage());
 
   if (status && !VALID_STATUSES.includes(status))
     throw new ApiError(
@@ -141,7 +180,7 @@ const createBlog = async ({
       content,
       metaDescription: metaDescription || null,
       urlSlug: finalSlug,
-      category,
+      category: normalizedCategory,
       tags: parsedTags,
       images,
       authorId: adminId,
@@ -198,12 +237,9 @@ const updateBlog = async ({
   }
 
   if (category !== undefined) {
-    if (!VALID_CATEGORIES.includes(category))
-      throw new ApiError(
-        400,
-        `Invalid category. Valid: ${VALID_CATEGORIES.join(", ")}`,
-      );
-    data.category = category;
+    const normalizedCategory = normalizeCategory(category);
+    if (!normalizedCategory) throw new ApiError(400, validCategoriesMessage());
+    data.category = normalizedCategory;
   }
 
   if (status !== undefined) {
@@ -236,13 +272,11 @@ const updateBlog = async ({
     }
   }
 
-
   if (imageFiles && imageFiles.length > 0) {
     blog.images.forEach((url) => removeFile(url, "blog"));
     data.images = imageFiles.map((f) => blogImageUrl(f.filename));
   }
 
- 
   if (pdfFile) {
     data.pdfFileUrl = blogPdfUrl(pdfFile.filename);
     removeFile(blog.pdfFileUrl, "blogPdf");
@@ -268,7 +302,6 @@ const deleteBlog = async ({ blogId }) => {
 
   return { id: blogId };
 };
-
 
 const deleteBlogImage = async ({ blogId, imageUrl }) => {
   const blog = await prisma.blog.findUnique({ where: { id: blogId } });
@@ -305,7 +338,6 @@ const setBlogStatus = async ({ blogId, status }) => {
   return decorateBlog(updated);
 };
 
-
 const adminGetAllBlogs = async ({
   category,
   status,
@@ -316,12 +348,9 @@ const adminGetAllBlogs = async ({
   const where = {};
 
   if (category) {
-    if (!VALID_CATEGORIES.includes(category))
-      throw new ApiError(
-        400,
-        `Invalid category. Valid: ${VALID_CATEGORIES.join(", ")}`,
-      );
-    where.category = category;
+    const normalizedCategory = normalizeCategory(category);
+    if (!normalizedCategory) throw new ApiError(400, validCategoriesMessage());
+    where.category = normalizedCategory;
   }
 
   if (status) {
@@ -426,7 +455,6 @@ const getBlogStats = async () => {
   };
 };
 
-
 const getPublicBlogs = async ({
   category,
   search,
@@ -437,12 +465,9 @@ const getPublicBlogs = async ({
   const where = { ...publicWhere() };
 
   if (category) {
-    if (!VALID_CATEGORIES.includes(category))
-      throw new ApiError(
-        400,
-        `Invalid category. Valid: ${VALID_CATEGORIES.join(", ")}`,
-      );
-    where.category = category;
+    const normalizedCategory = normalizeCategory(category);
+    if (!normalizedCategory) throw new ApiError(400, validCategoriesMessage());
+    where.category = normalizedCategory;
   }
 
   if (tag) {
@@ -506,7 +531,6 @@ const _fetchPublicBlog = async (blog) => {
   return blog;
 };
 
-
 const getBlogBySlug = async ({ slug }) => {
   const blog = await prisma.blog.findUnique({
     where: { urlSlug: slug },
@@ -514,7 +538,6 @@ const getBlogBySlug = async ({ slug }) => {
   });
   return _fetchPublicBlog(blog);
 };
-
 
 const getBlogById = async ({ blogId }) => {
   const blog = await prisma.blog.findUnique({

@@ -90,14 +90,18 @@ enum AdStatus {
 }
 
 enum BlogCategory {
-  BUY
-  RENT
-  INVEST
-  MARKET_NEWS
-  GUIDES
-  DESIGN_LIFESTYLE
-  LEGAL
-  COMMERCIAL
+  POLICY_REGULATION      @map("Policy & Regulation")
+  PROPERTY_NEWS          @map("Property News")
+  OPINION_COMMENTARY     @map("Opinion & Commentary")
+  PROPERTY_INVESTMENT    @map("Property Investment")
+  MARKET_ANALYSIS        @map("Market Analysis")
+  DEVELOPERS_DEVELOPMENT @map("Developers & Development")
+  PROPERTY_LAW           @map("Property Law")
+  FRAUD_ALERTS           @map("Fraud Alerts")
+  PROPERTY_DISPUTES      @map("Property Disputes")
+  NEWS                   @map("News")
+  LANDLORD_TENANTS       @map("Landlord & Tenants")
+  MARKET_TRENDS          @map("Market Trends")
 }
 
 enum BlogStatus {
