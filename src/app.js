@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const path = require("path");
 
 const routes = require("./routes");
+const { corsOriginHandler } = require("./config/cors");
 const { errorHandler, notFound } = require("./middleware/error");
 const { seedDefaultPlanFeatures } = require("./services/planFeatures.service");
 
@@ -12,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: true,
+    origin: corsOriginHandler,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

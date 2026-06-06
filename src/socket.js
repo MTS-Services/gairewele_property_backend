@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const { verifyToken } = require("./utils/jwt");
 const prisma = require("./config/prisma");
+const { corsOriginHandler } = require("./config/cors");
 
 let io = null;
 
@@ -8,7 +9,11 @@ const userRoom = (userId) => `user:${userId}`;
 
 const init = (httpServer) => {
   io = new Server(httpServer, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
+    cors: {
+      origin: corsOriginHandler,
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
     maxHttpBufferSize: 10 * 1024 * 1024,
   });
 
@@ -39,7 +44,6 @@ const init = (httpServer) => {
     const { user } = socket;
     socket.join(userRoom(user.id));
 
-
     socket.broadcast.emit("presence:online", { userId: user.id });
 
     // Typing indicator: { receiverId, isTyping }
@@ -51,7 +55,6 @@ const init = (httpServer) => {
       });
     });
 
-  
     socket.on("conversation:join", ({ conversationId }) => {
       if (conversationId) socket.join(`conversation:${conversationId}`);
     });
