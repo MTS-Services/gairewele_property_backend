@@ -1,11 +1,21 @@
 const { Server } = require("socket.io");
 const { verifyToken } = require("./utils/jwt");
 const prisma = require("./config/prisma");
-const { corsOriginHandler } = require("./config/cors");
 
 let io = null;
 
 const userRoom = (userId) => `user:${userId}`;
+const allowedOrigins = [
+  "https://prodev.property-file.com",
+  "http://localhost:5173",
+];
+
+const corsOriginHandler = (origin, callback) => {
+  if (!origin || allowedOrigins.includes(origin)) {
+    return callback(null, true);
+  }
+  return callback(new Error("Not allowed by CORS"));
+};
 
 const init = (httpServer) => {
   io = new Server(httpServer, {

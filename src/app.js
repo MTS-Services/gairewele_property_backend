@@ -5,11 +5,21 @@ const morgan = require("morgan");
 const path = require("path");
 
 const routes = require("./routes");
-const { corsOriginHandler } = require("./config/cors");
 const { errorHandler, notFound } = require("./middleware/error");
 const { seedDefaultPlanFeatures } = require("./services/planFeatures.service");
 
 const app = express();
+const allowedOrigins = [
+  "https://prodev.property-file.com",
+  "http://localhost:5173",
+];
+
+const corsOriginHandler = (origin, callback) => {
+  if (!origin || allowedOrigins.includes(origin)) {
+    return callback(null, true);
+  }
+  return callback(new Error("Not allowed by CORS"));
+};
 
 app.use(
   cors({
