@@ -32,6 +32,7 @@ const chatUpload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
+// Utility to determine attachment type based on MIME type
 const detectAttachmentType = (mimetype = "") => {
   if (mimetype.startsWith("image/")) return "image";
   if (mimetype.startsWith("video/")) return "video";
