@@ -197,6 +197,7 @@ const createBlog = async ({
   return decorateBlog(blog);
 };
 
+// Partial update — only fields provided will be updated. Images and PDF are replaced if new files are uploaded.
 const updateBlog = async ({
   blogId,
   imageFiles,
