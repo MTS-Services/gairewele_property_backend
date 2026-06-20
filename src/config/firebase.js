@@ -7,7 +7,11 @@ function initFirebase() {
 
   try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      const decodedAccount = Buffer.from(
+        process.env.FIREBASE_SERVICE_ACCOUNT,
+        "base64",
+      ).toString("utf-8");
+      const serviceAccount = JSON.parse(decodedAccount);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: process.env.FIREBASE_PROJECT_ID,
