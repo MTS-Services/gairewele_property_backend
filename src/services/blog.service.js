@@ -172,7 +172,7 @@ const createBlog = async ({
     if (isNaN(parsedPublishDate))
       throw new ApiError(400, "Invalid publishDate");
   }
-
+  // Create blog in DB
   const blog = await prisma.blog.create({
     data: {
       title,
