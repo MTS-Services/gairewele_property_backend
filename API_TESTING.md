@@ -188,14 +188,17 @@ Password: Test1234!
 Step 2 — Get the ID token via Postman
 POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDSZeI6VCobrbhf6izz8j4_s-f7WTkwoJg
 
-## 5. Firebase Login
+## 5. Firebase Login (Google / Facebook / etc)
 
 **POST** `{{baseUrl}}/api/auth/firebase-login`
 
-Use the Firebase Web SDK on the client to sign in and call `user.getIdToken()`,
-then send that token here.
+Frontend flow:
 
-**Body**
+1. Use Firebase Web SDK to sign in with Google (or any provider)
+2. Get the ID token: `const idToken = await user.getIdToken()`
+3. Send that token to this backend endpoint
+
+**Backend expects:**
 
 ```json
 {
@@ -204,12 +207,11 @@ then send that token here.
   "fullName": "Optional Name Override",
   "image": "https://example.com/avatar.png"
 }
-
 ```
 
 | Field      | Required | Notes                                                                                          |
 | ---------- | -------- | ---------------------------------------------------------------------------------------------- |
-| `idToken`  | Yes      | Firebase ID token from client SDK                                                              |
+| `idToken`  | Yes      | Firebase ID token from client SDK (from `user.getIdToken()`)                                   |
 | `role`     | No       | Used only on first sign-in. Allowed: `USER`, `AGENT`, `DEVELOPER`, `OWNER`. Defaults to `USER` |
 | `fullName` | No       | Fallback if Firebase token has no display name                                                 |
 | `image`    | No       | Fallback if Firebase token has no photo URL                                                    |
@@ -223,7 +225,9 @@ then send that token here.
   "data": {
     "user": {
       "id": "uuid",
-      "email": "john@gmail.com",
+      "email": "shanjidahmed66@gmail.com",
+      "fullName": "shanjid ahmed",
+      "image": "https://lh3.googleusercontent.com/a/ACg8ocJLWjxoAXh6kHu2vKAWT-p4TflBI3uAzIl6IvsuWg6AAmdB8g=s96-c",
       "provider": "FIREBASE",
       "role": "USER"
     },
@@ -232,11 +236,27 @@ then send that token here.
 }
 ```
 
+**Testing in Postman:**
+
+1. Frontend signs in with Google → gets `idToken`
+2. Copy that token from browser console: `firebase.auth().currentUser.getIdToken().then(t => console.log(t))`
+3. In Postman, **POST** to `http://localhost:3000/api/auth/firebase-login`
+4. **Body** (raw JSON):
+
+```json
+{
+  "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImVlOTA0NmVhZDJlMDUwMDAxMGVkNTA0M2I0ODNkODRiMGM1MmM3YzQiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoic2hhbmppZCBhaG1lZCIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NKTFdqeG9BWGg2a0h1MnZLQVdULXA0VGZsQkkzdUF6SWw2SXZzdVdnNkFBbWRCOGc9czk2LWMiLCJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vcHJvcGVydHktcHJvamVjdC0zNTAyZCIsImF1ZCI6InByb3BlcnR5LXByb2plY3QtMzUwMmQiLCJhdXRoX3RpbWUiOjE3ODE5NDU1NDIsInVzZXJfaWQiOiJ5cjJ6U0ZiOXlQZXd3ME1sN1pQOHRJSG8yUmYyIiwic3ViIjoieXIyelNGYjl5UGV3dzBNbDdaUDh0SUhvMlJmMiIsImlhdCI6MTc4MTk0NTU0MiwiZXhwIjoxNzgxOTQ5MTQyLCJlbWFpbCI6InNoYW5qaWRhaG1lZDY2QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTAxMTM2NzMyNjE3MjczODM4NDI1Il0sImVtYWlsIjpbInNoYW5qaWRhaG1lZDY2QGdtYWlsLmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6Imdvb2dsZS5jb20ifX0.pvu87d-9g6D4RM0Kp8ZL1-KPHNpbUUCZFFMZmVGRt-AUiEHEBDpGNdHSl-_3vIznZDZN5Vhg2C8x6xImTch6E8RT8peXGpOFahTBWQyrY7BA4gY5hVISLA8x0mPSGAyVQdUrlqj0mt56t3e1zvR_x095Ijef7AgZTDtTTGwws84zfEaJFykkmdgOiyqFGCYPK4IfF4dUhXlls_4brBTW7goliz1THAtwSOpoGwwDH3qhl5uaAUtUFB7l7d7EvM5Kbn0O1A84iX92OPsbwlxW_mqRWxLXnrUUVHRMAG_smBAFXRXSPrPKe5LTXKf0EruthI_nf6aHNrTXBlmOrq-kbA",
+  "role": "USER"
+}
+```
+
+5. Send → you get back your backend JWT token in `data.token`
+
 **Errors**
 
 - `400` — `idToken` missing or Firebase token has no email
 - `401` — invalid Firebase ID token
-- `500` — Firebase admin not configured (add `FIREBASE_SERVICE_ACCOUNT` to `.env`)
+- `500` — Firebase admin not configured (verify `FIREBASE_SERVICE_ACCOUNT` is in `.env`)
 
 ---
 
