@@ -1,10 +1,12 @@
 const router = require("express").Router();
 const { authenticate, authorize } = require("../middleware/auth");
+const { upload } = require("../middleware/upload");
 const {
   getAllUsers,
   exportUsersCsv,
   getUserById,
   toggleSuspendUser,
+  updateOwnProfile,
   getAllListings,
   exportPaymentsCsv,
   getPlanFeatures,
@@ -16,6 +18,8 @@ const {
 const superAdmin = [authenticate, authorize("ADMIN")];
 
 const listingAdmin = [authenticate, authorize("ADMIN", "SUB_ADMIN_LISTING")];
+
+router.patch("/profile", ...superAdmin, upload.single("image"), updateOwnProfile);
 
 // Users
 router.get("/users", ...superAdmin, getAllUsers);

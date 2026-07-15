@@ -12,7 +12,11 @@ const userRoutes = require("./dashboard.routes");
 const subscriptionRoutes = require("./subscription.routes");
 const newsletterRoutes = require("./newsletter.routes");
 
-router.get("/health", (req, res) => res.json({ status: "ok" }));
+const { success } = require("../utils/response");
+
+router.get("/health", (req, res) =>
+  success(res, { status: "ok" }, "Health is ok"),
+);
 router.use("/auth", authRoutes);
 router.use("/chat", chatRoutes);
 router.use("/properties", propertyRoutes);

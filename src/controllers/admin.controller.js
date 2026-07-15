@@ -3,6 +3,7 @@ const subscriptionService = require("../services/subscription.service");
 const planFeaturesService = require("../services/planFeatures.service");
 const ApiError = require("../utils/ApiError");
 const { success } = require("../utils/response");
+const { fileUrl } = require("../middleware/upload");
 
 const csvEscape = (value) => {
   if (value === null || value === undefined) return "";
@@ -149,6 +150,29 @@ const toggleSuspendUser = async (req, res, next) => {
   }
 };
 
+const updateOwnProfile = async (req, res, next) => {
+  try {
+    const data = { ...req.body };
+    if (req.file) {
+      data.image = fileUrl("image", req.file.filename);
+    }
+
+    const user = await adminService.updateOwnProfile({
+      adminId: req.user.id,
+      fullName: data.fullName,
+      email: data.email,
+      image: data.image,
+      oldPassword: data.oldPassword,
+      newPassword: data.newPassword,
+      confirmPassword: data.confirmPassword,
+    });
+
+    return success(res, { user }, "Admin profile updated successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
 const getAllListings = async (req, res, next) => {
   try {
     const { ownerRole, approvalStatus, search, page, pageSize } = req.query;
@@ -279,6 +303,7 @@ module.exports = {
   exportUsersCsv,
   getUserById,
   toggleSuspendUser,
+  updateOwnProfile,
   getAllListings,
   exportPaymentsCsv,
   getPlanFeatures,

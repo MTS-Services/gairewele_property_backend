@@ -133,6 +133,75 @@ const toggleSuspendUser = async ({ userId, adminId }) => {
   };
 };
 
+const updateOwnProfile = async ({
+  adminId,
+  fullName,
+  email,
+  image,
+  oldPassword,
+  newPassword,
+  confirmPassword,
+}) => {
+  const admin = await prisma.user.findUnique({ where: { id: adminId } });
+  if (!admin) throw new ApiError(404, "Admin not found");
+
+  const updateData = {};
+
+  if (fullName !== undefined) {
+    const normalizedFullName = String(fullName).trim();
+    if (!normalizedFullName) throw new ApiError(400, "fullName cannot be empty");
+    updateData.fullName = normalizedFullName;
+  }
+
+  if (email !== undefined) {
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      throw new ApiError(400, "Invalid email address");
+    }
+
+    if (normalizedEmail !== admin.email) {
+      const existing = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+      });
+      if (existing) throw new ApiError(409, "Email already in use");
+      updateData.email = normalizedEmail;
+    }
+  }
+
+  if (image !== undefined) updateData.image = image;
+
+  if (newPassword !== undefined) {
+    if (!oldPassword || !confirmPassword) {
+      throw new ApiError(
+        400,
+        "oldPassword and confirmPassword are required to change password",
+      );
+    }
+    if (!admin.password) {
+      throw new ApiError(400, "This account has no password to change");
+    }
+    if (newPassword.length < 6) {
+      throw new ApiError(400, "newPassword must be at least 6 characters");
+    }
+    if (newPassword !== confirmPassword) {
+      throw new ApiError(400, "Passwords do not match");
+    }
+    const valid = await bcrypt.compare(oldPassword, admin.password);
+    if (!valid) throw new ApiError(400, "Old password is incorrect");
+    updateData.password = await bcrypt.hash(newPassword, 10);
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    throw new ApiError(400, "No valid fields provided to update");
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: adminId },
+    data: updateData,
+  });
+  return sanitizeUser(updated);
+};
+
 const PROPERTY_INCLUDE_ADMIN = {
   images: { orderBy: { createdAt: "asc" } },
   owner: {
@@ -269,6 +338,7 @@ module.exports = {
   getUsersForExport,
   getUserById,
   toggleSuspendUser,
+  updateOwnProfile,
   getAllListings,
   createSubAdmin,
   getSubAdmins,
