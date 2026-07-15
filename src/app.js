@@ -10,6 +10,8 @@ const { seedDefaultPlanFeatures } = require("./services/planFeatures.service");
 
 const app = express();
 const allowedOrigins = [
+  "https://property-file.com",
+  "https://www.property-file.com",
   "https://prodev.property-file.com",
   "http://localhost:5173",
 ];
