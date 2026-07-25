@@ -10,9 +10,19 @@ const {
 } = require("../controllers/propertyRequest.controller");
 
 
-router.post("/", authenticate, authorize("USER"), createRequest);
+router.post(
+  "/",
+  authenticate,
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER"),
+  createRequest,
+);
 
-router.get("/my", authenticate, authorize("USER"), getMyRequests);
+router.get(
+  "/my",
+  authenticate,
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER"),
+  getMyRequests,
+);
 
 
 router.get(

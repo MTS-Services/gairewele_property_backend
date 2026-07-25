@@ -4,7 +4,7 @@ const { getPlan } = require("../config/plans");
 const { getEffectivePlanFeatures } = require("./planFeatures.service");
 const { ensureSubscription } = require("./subscription.service");
 
-const ALLOWED_ROLES = ["AGENT", "DEVELOPER", "OWNER"];
+const ALLOWED_ROLES = ["USER", "AGENT", "DEVELOPER", "OWNER"];
 const VALID_PROPERTY_TYPES = [
   "APARTMENT",
   "HOUSE",
@@ -33,6 +33,27 @@ const VALID_APPROVAL_STATUSES = [
   "REJECTED",
   "FEATURED",
 ];
+
+const optionalString = (value) => {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed.length ? trimmed : null;
+};
+
+/** When propertyType is OTHERS, customPropertyType is required. */
+const resolveCustomPropertyType = (propertyType, customPropertyType) => {
+  const custom = optionalString(customPropertyType);
+  if (propertyType === "OTHERS") {
+    if (!custom) {
+      throw new ApiError(
+        400,
+        "customPropertyType is required when propertyType is OTHERS",
+      );
+    }
+    return custom;
+  }
+  return null;
+};
 
 const PROPERTY_INCLUDE = {
   images: { orderBy: { createdAt: "asc" } },
@@ -124,13 +145,13 @@ const validateEnumFilter = (field, value, validValues) => {
 };
 
 // ─────────────────────────────────────────────────────────────────
-// Create a new property listing (role: AGENT / DEVELOPER / OWNER)
+// Create a new property listing (role: USER / AGENT / DEVELOPER / OWNER)
 // ─────────────────────────────────────────────────────────────────
 const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
   if (!ALLOWED_ROLES.includes(ownerRole)) {
     throw new ApiError(
       403,
-      "Only agents, developers and owners can create property listings",
+      "Only users, agents, developers and owners can create property listings",
     );
   }
 
@@ -138,6 +159,7 @@ const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
     title,
     description,
     propertyType,
+    customPropertyType,
     condition,
     size,
     listingType,
@@ -185,6 +207,11 @@ const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
       `Invalid listingType. Valid values: ${VALID_LISTING_TYPES.join(", ")}`,
     );
 
+  const resolvedCustomType = resolveCustomPropertyType(
+    propertyType,
+    customPropertyType,
+  );
+
   const parsedSize = parsePropertySize(size);
 
   // ── Plan limits enforcement (DB-backed; admin can edit these) ──
@@ -220,6 +247,7 @@ const createProperty = async ({ ownerId, ownerRole, data, imageUrls = [] }) => {
       title,
       description,
       propertyType,
+      customPropertyType: resolvedCustomType,
       condition,
       size: parsedSize,
       propertyTitle: listingType,
@@ -285,6 +313,30 @@ const updateProperty = async ({
     updateData.size = parsePropertySize(data.size);
   }
   if (data.listingType) updateData.propertyTitle = data.listingType;
+
+  // Resolve custom type when propertyType and/or customPropertyType change
+  const nextPropertyType = data.propertyType ?? property.propertyType;
+  if (
+    data.propertyType !== undefined ||
+    data.customPropertyType !== undefined
+  ) {
+    if (
+      data.propertyType !== undefined &&
+      !VALID_PROPERTY_TYPES.includes(data.propertyType)
+    ) {
+      throw new ApiError(
+        400,
+        `Invalid propertyType. Valid values: ${VALID_PROPERTY_TYPES.join(", ")}`,
+      );
+    }
+    updateData.customPropertyType = resolveCustomPropertyType(
+      nextPropertyType,
+      data.customPropertyType !== undefined
+        ? data.customPropertyType
+        : property.customPropertyType,
+    );
+  }
+
   updateData.approvalStatus = "PENDING";
 
   // Append new images — existing PropertyImage rows are untouched

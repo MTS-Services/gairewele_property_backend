@@ -122,6 +122,8 @@ model User {
   firebaseUid     String?       @unique
 
   // Professional fields (Agent / Developer / Owner)
+  // phoneNumber is required in app logic for AGENT/DEVELOPER/OWNER.
+  // whatsappNumber, website, and companyLogo are optional at registration.
   phoneNumber     String?
   whatsappNumber  String?
   companyName     String?
@@ -172,6 +174,8 @@ model OtpToken {
 model PropertyRequest {
   id                  String                @id @default(uuid())
   propertyType        PropertyType
+  /// Required when propertyType is OTHERS — free-text custom type
+  customPropertyType  String?
   preferredLocation   String
   bedrooms            Int
   bathrooms           Int
@@ -200,6 +204,8 @@ model Property {
   title           String
   description     String
   propertyType    PropertyType
+  /// Required when propertyType is OTHERS — free-text custom type
+  customPropertyType String?
   condition       PropertyCondition
   size            Int
   propertyTitle   String

@@ -6,6 +6,7 @@ const createRequest = async (req, res, next) => {
   try {
     const {
       propertyType,
+      customPropertyType,
       preferredLocation,
       bedrooms,
       bathrooms,
@@ -23,6 +24,7 @@ const createRequest = async (req, res, next) => {
     const data = await propertyRequestService.createRequest({
       userId: req.user.id,
       propertyType: propertyType ? propertyType.toUpperCase() : null,
+      customPropertyType,
       preferredLocation,
       bedrooms,
       bathrooms,

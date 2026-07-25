@@ -7,13 +7,13 @@ Base URL (prod): `https://backend.property-file.com/api`
 
 ## Roles & Access
 
-| Endpoint                              | Who can call                                   |
-| ------------------------------------- | ---------------------------------------------- |
-| `POST /property-requests`             | USER only                                      |
-| `GET /property-requests/my`           | USER only — own requests + dashboard stats     |
-| `GET /property-requests`              | AGENT, DEVELOPER, OWNER                        |
-| `GET /property-requests/:id`          | Any authenticated user (USER can only see own) |
-| `PATCH /property-requests/:id/status` | AGENT, DEVELOPER, OWNER                        |
+| Endpoint                              | Who can call                                                      |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| `POST /property-requests`             | USER, AGENT, DEVELOPER, OWNER                                     |
+| `GET /property-requests/my`           | USER, AGENT, DEVELOPER, OWNER — own requests + dashboard stats    |
+| `GET /property-requests`              | AGENT, DEVELOPER, OWNER — all requests                            |
+| `GET /property-requests/:id`          | Any authenticated user (USER can only see own)                    |
+| `PATCH /property-requests/:id/status` | AGENT, DEVELOPER, OWNER                                           |
 
 ---
 
@@ -104,10 +104,13 @@ Content-Type: application/json
 | --------------------- | -------- | -------------------------------- |
 | `preferredMoveInDate` | DateTime | ISO 8601 — `2026-06-01T00:00:00` |
 | `preferences`         | String   | Additional requirements / notes  |
+| `customPropertyType`  | String   | Required only when `propertyType` is `OTHERS` |
 
 ### Valid `propertyType` values
 
 `APARTMENT` `HOUSE` `VILLA` `PENTHOUSE` `STUDIO` `TOWNHOUSE` `DETACHED` `SEMI_DETACHED` `TERRACE` `FLAT` `OFFICE_SPACE` `OTHERS`
+
+> When selecting **Other**, send `propertyType: "OTHERS"` and `customPropertyType: "your custom type"`.
 
 ### Response (201)
 

@@ -8,11 +8,11 @@ Base URL: `https://backend.property-file.com/api`
 
 | Action                     | USER | AGENT | DEVELOPER | OWNER | ADMIN |
 | -------------------------- | ---- | ----- | --------- | ----- | ----- |
-| Create property            | ✗    | ✓     | ✓         | ✓     | ✗     |
-| View own properties        | ✗    | ✓     | ✓         | ✓     | ✗     |
-| Edit own property          | ✗    | ✓     | ✓         | ✓     | ✗     |
-| Delete own property        | ✗    | ✓     | ✓         | ✓     | ✓     |
-| View public listings       | ✓    | ✓     | ✓         | ✓     | ✓     |
+| Create property (sell)     | ✓    | ✓     | ✓         | ✓     | ✗     |
+| View own properties        | ✓    | ✓     | ✓         | ✓     | ✗     |
+| Edit own property          | ✓    | ✓     | ✓         | ✓     | ✗     |
+| Delete own property        | ✓    | ✓     | ✓         | ✓     | ✓     |
+| View public listings (buy) | ✓    | ✓     | ✓         | ✓     | ✓     |
 | View single property       | ✓    | ✓     | ✓         | ✓     | ✓     |
 | View ALL properties        | ✗    | ✗     | ✗         | ✗     | ✓     |
 | Approve / Reject / Feature | ✗    | ✗     | ✗         | ✗     | ✓     |
@@ -40,7 +40,8 @@ Editing a PENDING or REJECTED property re-submits it as PENDING.
 
 | Field            | Valid Values                                                                                                        |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `propertyType`   | APARTMENT, HOUSE, VILLA, PENTHOUSE, STUDIO, TOWNHOUSE, DETACHED, SEMI_DETACHED, TERRACE, FLAT, OFFICE_SPACE, OTHERS |
+| `propertyType`   | APARTMENT, HOUSE, VILLA, PENTHOUSE, STUDIO, TOWNHOUSE, DETACHED, SEMI_DETACHED, TERRACE, FLAT, OFFICE_SPACE, **OTHERS** |
+| `customPropertyType` | Free text — **required only when** `propertyType` is `OTHERS` |
 | `condition`      | NEW, RENOVATED, FAIRLY_USED, UNDER_CONSTRUCTION, OFF_PLAN                                                           |
 | `listingType`    | FOR_SALE, FOR_RENT, FOR_LEASE, OTHERS                                                                               |
 | `approvalStatus` | PENDING, PUBLISHED, REJECTED, FEATURED                                                                              |
@@ -60,7 +61,8 @@ Content-Type: `multipart/form-data`
 |------------------|----------|----------|------------------------------------|
 | title | string | ✓ | |
 | description | string | ✓ | |
-| propertyType | string | ✓ | See enum table above |
+| propertyType | string | ✓ | See enum table above. Use `OTHERS` for custom types |
+| customPropertyType | string | Conditional | Required when `propertyType` is `OTHERS` |
 | condition | string | ✓ | See enum table above |
 | size | string | ✓ | e.g. "120 sqm" |
 | listingType | string | ✓ | See enum table above |
@@ -73,6 +75,12 @@ Content-Type: `multipart/form-data`
 | companyName | string | Optional | |
 | officeAddress | string | Optional | |
 | phoneNumber | string | Optional | |
+
+> When the user selects **Other** for apartment/property type, send:
+> - `propertyType=OTHERS`
+> - `customPropertyType=<user typed value>` (e.g. "Serviced Apartment")
+>
+> For any other predefined type, omit `customPropertyType` (it will be stored as `null`).
 
 **cURL Example:**
 

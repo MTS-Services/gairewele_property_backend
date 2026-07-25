@@ -98,11 +98,11 @@ If `role` is omitted it defaults to `USER`.
 | `password`       | Text | Yes      |                                  |
 | `role`           | Text | Yes      | `AGENT`, `DEVELOPER`, or `OWNER` |
 | `phoneNumber`    | Text | Yes      |                                  |
-| `whatsappNumber` | Text | No       |                                  |
-| `companyName`    | Text | No       |                                  |
-| `website`        | Text | No       |                                  |
+| `whatsappNumber` | Text | No       | Optional — can be omitted/empty  |
+| `companyName`    | Text | No       | Optional                         |
+| `website`        | Text | No       | Optional — can be omitted/empty  |
 | `image`          | File | No       | Profile photo (max 5MB)          |
-| `companyLogo`    | File | No       | Company logo (max 5MB)           |
+| `companyLogo`    | File | No       | Optional company/website logo    |
 
 **Response 201**
 

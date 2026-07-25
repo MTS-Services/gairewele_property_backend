@@ -14,6 +14,12 @@ const sanitizeUser = (user) => {
   return rest;
 };
 
+const optionalString = (value) => {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed.length ? trimmed : null;
+};
+
 const register = async ({
   fullName,
   email,
@@ -27,8 +33,9 @@ const register = async ({
   companyLogo,
 }) => {
   const assignedRole = role && role !== "USER" ? role.toUpperCase() : "USER";
+  const normalizedPhone = optionalString(phoneNumber);
 
-  if (PROFESSIONAL_ROLES.includes(assignedRole) && !phoneNumber) {
+  if (PROFESSIONAL_ROLES.includes(assignedRole) && !normalizedPhone) {
     throw new ApiError(
       400,
       "phoneNumber is required for AGENT, DEVELOPER and OWNER",
@@ -40,20 +47,25 @@ const register = async ({
 
   const hashed = await bcrypt.hash(password, 10);
 
+  // Optional professional fields — may be omitted or left empty
+  const optionalProfessionalFields = {
+    whatsappNumber: optionalString(whatsappNumber),
+    companyName: optionalString(companyName),
+    website: optionalString(website),
+    companyLogo: optionalString(companyLogo),
+  };
+
   const user = await prisma.user.create({
     data: {
       fullName,
       email,
       password: hashed,
-      image,
+      image: optionalString(image),
       role: assignedRole,
       provider: "LOCAL",
       ...(PROFESSIONAL_ROLES.includes(assignedRole) && {
-        phoneNumber,
-        whatsappNumber,
-        companyName,
-        website,
-        companyLogo,
+        phoneNumber: normalizedPhone,
+        ...optionalProfessionalFields,
       }),
     },
   });

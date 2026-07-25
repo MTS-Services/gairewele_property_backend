@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 
 const VALID_STATUSES = ["NEW", "IN_PROCESS", "COMPLETED"];
 const AGENT_ROLES = ["AGENT", "DEVELOPER", "OWNER"];
+const REQUESTER_ROLES = ["USER", "AGENT", "DEVELOPER", "OWNER"];
 
 const PROPERTY_TYPES = [
   "APARTMENT",
@@ -20,11 +21,12 @@ const PROPERTY_TYPES = [
 ];
 
 // ─────────────────────────────────────────────────────────────────
-// USER — create a new property request
+// USER / AGENT / DEVELOPER / OWNER — create a new property request
 // ─────────────────────────────────────────────────────────────────
 const createRequest = async ({
   userId,
   propertyType,
+  customPropertyType,
   preferredLocation,
   bedrooms,
   bathrooms,
@@ -43,6 +45,18 @@ const createRequest = async ({
       400,
       `Invalid propertyType. Valid: ${PROPERTY_TYPES.join(", ")}`,
     );
+
+  const custom =
+    customPropertyType !== undefined && customPropertyType !== null
+      ? String(customPropertyType).trim()
+      : "";
+  if (propertyType === "OTHERS" && !custom) {
+    throw new ApiError(
+      400,
+      "customPropertyType is required when propertyType is OTHERS",
+    );
+  }
+
   if (!preferredLocation)
     throw new ApiError(400, "preferredLocation is required");
   if (bedrooms == null) throw new ApiError(400, "bedrooms is required");
@@ -65,6 +79,7 @@ const createRequest = async ({
   return prisma.propertyRequest.create({
     data: {
       propertyType,
+      customPropertyType: propertyType === "OTHERS" ? custom : null,
       preferredLocation,
       bedrooms: parseInt(bedrooms, 10),
       bathrooms: parseInt(bathrooms, 10),
@@ -83,7 +98,7 @@ const createRequest = async ({
 };
 
 // ─────────────────────────────────────────────────────────────────
-// USER — get own requests + dashboard stats
+// USER / AGENT / DEVELOPER / OWNER — get own requests + dashboard stats
 // ─────────────────────────────────────────────────────────────────
 const getMyRequests = async ({ userId, status, page = 1, pageSize = 20 }) => {
   const where = { userId };
@@ -184,7 +199,7 @@ const getAllRequests = async ({ status, search, page = 1, pageSize = 20 }) => {
 
 // ─────────────────────────────────────────────────────────────────
 // Get single request by ID
-// USER can only view own; AGENT/DEVELOPER/OWNER can view any
+// Requesters can view own; AGENT/DEVELOPER/OWNER/ADMIN can view any
 // ─────────────────────────────────────────────────────────────────
 const getRequestById = async ({ requestId, actorId, actorRole }) => {
   const request = await prisma.propertyRequest.findUnique({
@@ -196,7 +211,7 @@ const getRequestById = async ({ requestId, actorId, actorRole }) => {
 
   if (!request) throw new ApiError(404, "Property request not found");
 
-  // If caller is a regular USER, they can only see their own request
+  // Professionals/admins can view any request; others only their own
   if (!AGENT_ROLES.includes(actorRole) && actorRole !== "ADMIN") {
     if (request.userId !== actorId) throw new ApiError(403, "Access denied");
   }
@@ -251,4 +266,5 @@ module.exports = {
   getRequestById,
   updateRequestStatus,
   deleteRequest,
+  REQUESTER_ROLES,
 };

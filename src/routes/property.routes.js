@@ -48,7 +48,7 @@ router.patch(
 router.post(
   "/",
   authenticate,
-  authorize("AGENT", "DEVELOPER", "OWNER"),
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER"),
   upload,
   createProperty,
 );
@@ -56,14 +56,14 @@ router.post(
 router.get(
   "/my",
   authenticate,
-  authorize("AGENT", "DEVELOPER", "OWNER"),
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER"),
   getMyProperties,
 );
 
 router.patch(
   "/:id",
   authenticate,
-  authorize("AGENT", "DEVELOPER", "OWNER"),
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER"),
   upload,
   updateProperty,
 );
@@ -72,14 +72,14 @@ router.patch(
 router.delete(
   "/:id/gallery/:imageId",
   authenticate,
-  authorize("AGENT", "DEVELOPER", "OWNER"),
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER"),
   deletePropertyImage,
 );
 
 router.delete(
   "/:id",
   authenticate,
-  authorize("AGENT", "DEVELOPER", "OWNER", "ADMIN"),
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER", "ADMIN"),
   deleteProperty,
 );
 
