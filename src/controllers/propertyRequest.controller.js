@@ -66,6 +66,7 @@ const getAllRequests = async (req, res, next) => {
   try {
     const { status, search, page, pageSize } = req.query;
     const data = await propertyRequestService.getAllRequests({
+      excludeUserId: req.user.id,
       status: status ? status.toUpperCase() : null,
       search: search || null,
       page: parseInt(page, 10) || 1,

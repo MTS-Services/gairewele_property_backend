@@ -10,8 +10,8 @@ Base URL (prod): `https://backend.property-file.com/api`
 | Endpoint                              | Who can call                                                      |
 | ------------------------------------- | ----------------------------------------------------------------- |
 | `POST /property-requests`             | USER, AGENT, DEVELOPER, OWNER                                     |
-| `GET /property-requests/my`           | USER, AGENT, DEVELOPER, OWNER — own requests + dashboard stats    |
-| `GET /property-requests`              | USER, AGENT, DEVELOPER, OWNER — all requests (own + others)       |
+| `GET /property-requests/my`           | USER, AGENT, DEVELOPER, OWNER — own requests only                 |
+| `GET /property-requests`              | USER, AGENT, DEVELOPER, OWNER — others' requests only (not own)   |
 | `GET /property-requests/:id`          | Any authenticated user — any request                              |
 | `PATCH /property-requests/:id/status` | AGENT, DEVELOPER, OWNER                                           |
 

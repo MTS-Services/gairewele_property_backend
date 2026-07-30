@@ -142,10 +142,19 @@ const getMyRequests = async ({ userId, status, page = 1, pageSize = 20 }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────
-// AGENT / DEVELOPER / OWNER — get all requests
+// List others' requests (excludes the caller's own)
 // ─────────────────────────────────────────────────────────────────
-const getAllRequests = async ({ status, search, page = 1, pageSize = 20 }) => {
-  const where = {};
+const getAllRequests = async ({
+  excludeUserId,
+  status,
+  search,
+  page = 1,
+  pageSize = 20,
+}) => {
+  const where = {
+    // Only show other users' requests — not the caller's own
+    NOT: { userId: excludeUserId },
+  };
 
   if (status) {
     if (!VALID_STATUSES.includes(status))
@@ -179,9 +188,15 @@ const getAllRequests = async ({ status, search, page = 1, pageSize = 20 }) => {
         },
       }),
       prisma.propertyRequest.count({ where }),
-      prisma.propertyRequest.count({ where: { status: "NEW" } }),
-      prisma.propertyRequest.count({ where: { status: "IN_PROCESS" } }),
-      prisma.propertyRequest.count({ where: { status: "COMPLETED" } }),
+      prisma.propertyRequest.count({
+        where: { ...where, status: "NEW" },
+      }),
+      prisma.propertyRequest.count({
+        where: { ...where, status: "IN_PROCESS" },
+      }),
+      prisma.propertyRequest.count({
+        where: { ...where, status: "COMPLETED" },
+      }),
     ]);
 
   return {
