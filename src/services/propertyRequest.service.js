@@ -199,9 +199,9 @@ const getAllRequests = async ({ status, search, page = 1, pageSize = 20 }) => {
 
 // ─────────────────────────────────────────────────────────────────
 // Get single request by ID
-// Requesters can view own; AGENT/DEVELOPER/OWNER/ADMIN can view any
+// USER / AGENT / DEVELOPER / OWNER / ADMIN can view any request
 // ─────────────────────────────────────────────────────────────────
-const getRequestById = async ({ requestId, actorId, actorRole }) => {
+const getRequestById = async ({ requestId }) => {
   const request = await prisma.propertyRequest.findUnique({
     where: { id: requestId },
     include: {
@@ -210,11 +210,6 @@ const getRequestById = async ({ requestId, actorId, actorRole }) => {
   });
 
   if (!request) throw new ApiError(404, "Property request not found");
-
-  // Professionals/admins can view any request; others only their own
-  if (!AGENT_ROLES.includes(actorRole) && actorRole !== "ADMIN") {
-    if (request.userId !== actorId) throw new ApiError(403, "Access denied");
-  }
 
   return request;
 };

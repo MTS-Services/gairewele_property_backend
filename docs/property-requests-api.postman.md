@@ -11,8 +11,8 @@ Base URL (prod): `https://backend.property-file.com/api`
 | ------------------------------------- | ----------------------------------------------------------------- |
 | `POST /property-requests`             | USER, AGENT, DEVELOPER, OWNER                                     |
 | `GET /property-requests/my`           | USER, AGENT, DEVELOPER, OWNER — own requests + dashboard stats    |
-| `GET /property-requests`              | AGENT, DEVELOPER, OWNER — all requests                            |
-| `GET /property-requests/:id`          | Any authenticated user (USER can only see own)                    |
+| `GET /property-requests`              | USER, AGENT, DEVELOPER, OWNER — all requests (own + others)       |
+| `GET /property-requests/:id`          | Any authenticated user — any request                              |
 | `PATCH /property-requests/:id/status` | AGENT, DEVELOPER, OWNER                                           |
 
 ---

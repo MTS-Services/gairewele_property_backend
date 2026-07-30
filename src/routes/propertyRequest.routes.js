@@ -28,7 +28,7 @@ router.get(
 router.get(
   "/",
   authenticate,
-  authorize("AGENT", "DEVELOPER", "OWNER"),
+  authorize("USER", "AGENT", "DEVELOPER", "OWNER"),
   getAllRequests,
 );
 

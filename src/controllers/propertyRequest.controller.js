@@ -82,8 +82,6 @@ const getRequestById = async (req, res, next) => {
   try {
     const data = await propertyRequestService.getRequestById({
       requestId: req.params.id,
-      actorId: req.user.id,
-      actorRole: req.user.role,
     });
     return success(res, data, "Request fetched");
   } catch (err) {
