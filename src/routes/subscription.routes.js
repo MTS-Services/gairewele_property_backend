@@ -2,7 +2,7 @@ const router = require("express").Router();
 const { authenticate, authorize } = require("../middleware/auth");
 const ctrl = require("../controllers/subscription.controller");
 
-const subscriber = [authenticate, authorize("AGENT", "DEVELOPER", "OWNER")];
+const subscriber = [authenticate, authorize("USER", "AGENT", "DEVELOPER", "OWNER")];
 
 router.get("/plans", ctrl.listPlans);
 

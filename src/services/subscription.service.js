@@ -37,7 +37,7 @@ const getMySubscription = async ({ userId, role }) => {
   if (!SUBSCRIBABLE_ROLES.includes(role)) {
     throw new ApiError(
       403,
-      "Only AGENT, DEVELOPER and OWNER have subscriptions",
+      "Only USER, AGENT, DEVELOPER and OWNER have subscriptions",
     );
   }
   const sub = await ensureSubscription(userId);
@@ -68,7 +68,7 @@ const getMySubscription = async ({ userId, role }) => {
 // Returns Paystack authorization_url for the client to open.
 const initiateSubscription = async ({ userId, role, email, planKey }) => {
   if (!SUBSCRIBABLE_ROLES.includes(role)) {
-    throw new ApiError(403, "Only AGENT, DEVELOPER and OWNER can subscribe");
+    throw new ApiError(403, "Only USER, AGENT, DEVELOPER and OWNER can subscribe");
   }
   const plan = getPlan(planKey);
   if (!plan) throw new ApiError(400, "Invalid plan");
@@ -243,7 +243,7 @@ const cancelSubscription = async ({ userId, role }) => {
   if (!SUBSCRIBABLE_ROLES.includes(role)) {
     throw new ApiError(
       403,
-      "Only AGENT, DEVELOPER and OWNER can manage subscriptions",
+      "Only USER, AGENT, DEVELOPER and OWNER can manage subscriptions",
     );
   }
   const sub = await ensureSubscription(userId);
@@ -332,7 +332,7 @@ const getMyPaymentHistory = async ({ userId, role }) => {
   if (!SUBSCRIBABLE_ROLES.includes(role)) {
     throw new ApiError(
       403,
-      "Only AGENT, DEVELOPER and OWNER have payment history",
+      "Only USER, AGENT, DEVELOPER and OWNER have payment history",
     );
   }
   const sub = await ensureSubscription(userId);
@@ -348,7 +348,7 @@ const getBillingHistoryForPdf = async ({ userId, role }) => {
   if (!SUBSCRIBABLE_ROLES.includes(role)) {
     throw new ApiError(
       403,
-      "Only AGENT, DEVELOPER and OWNER can export billing history",
+      "Only USER, AGENT, DEVELOPER and OWNER can export billing history",
     );
   }
 

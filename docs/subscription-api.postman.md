@@ -15,7 +15,7 @@ All amounts are in **NGN (Naira)**. Paystack receives `amount * 100` (kobo) inte
 | PREMIUM | 15,000      | 20        | 6                | ✅ 1  | ❌                 | ❌              |
 | PURPLE  | 50,000      | Unlimited | 15               | ✅ 1  | ✅                 | ✅              |
 
-> Only **AGENT / DEVELOPER / OWNER** can have subscriptions. They get **FREE** automatically on register. USER and ADMIN have no subscription.
+> **USER / AGENT / DEVELOPER / OWNER** can have subscriptions. They get a **FREE** plan automatically when first accessing subscription APIs (professionals also get FREE on register). ADMIN has no subscription.
 
 ---
 
@@ -59,7 +59,7 @@ GET {{baseUrl}}/api/subscriptions/plans
 
 ```
 GET {{baseUrl}}/api/subscriptions/me
-Authorization: Bearer {{token}}     ← AGENT / DEVELOPER / OWNER
+Authorization: Bearer {{token}}     ← USER / AGENT / DEVELOPER / OWNER
 ```
 
 **Response:**
@@ -90,7 +90,7 @@ Authorization: Bearer {{token}}     ← AGENT / DEVELOPER / OWNER
 
 ```
 POST {{baseUrl}}/api/subscriptions/initiate
-Authorization: Bearer {{token}}     ← AGENT / DEVELOPER / OWNER
+Authorization: Bearer {{token}}     ← USER / AGENT / DEVELOPER / OWNER
 Content-Type: application/json
 ```
 

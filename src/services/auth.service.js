@@ -70,7 +70,8 @@ const register = async ({
     },
   });
 
-  if (PROFESSIONAL_ROLES.includes(assignedRole)) {
+  // All listing/subscription roles get a FREE plan on register
+  if (["USER", ...PROFESSIONAL_ROLES].includes(assignedRole)) {
     await prisma.subscription.create({
       data: { userId: user.id, plan: "FREE", isActive: true },
     });
@@ -127,7 +128,7 @@ const firebaseLogin = async ({ idToken, role, fullName, image }) => {
       },
     });
 
-    if (PROFESSIONAL_ROLES.includes(user.role)) {
+    if (["USER", ...PROFESSIONAL_ROLES].includes(user.role)) {
       await prisma.subscription.create({
         data: { userId: user.id, plan: "FREE", isActive: true },
       });

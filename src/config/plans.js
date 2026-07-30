@@ -61,7 +61,7 @@ const PLANS = {
   },
 };
 
-const SUBSCRIBABLE_ROLES = ["AGENT", "DEVELOPER", "OWNER"];
+const SUBSCRIBABLE_ROLES = ["USER", "AGENT", "DEVELOPER", "OWNER"];
 
 const getPlan = (key) => PLANS[key] || null;
 
