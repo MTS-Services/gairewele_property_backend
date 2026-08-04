@@ -490,7 +490,7 @@ const getPublicBlogs = async ({
   const [blogs, total] = await Promise.all([
     prisma.blog.findMany({
       where,
-      orderBy: { publishDate: "desc" },
+      orderBy: [{ createdAt: "desc" }, { publishDate: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
       select: {
