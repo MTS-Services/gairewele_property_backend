@@ -487,6 +487,7 @@ const getPublicBlogs = async ({
     ];
   }
 
+  // Get blogs
   const [blogs, total] = await Promise.all([
     prisma.blog.findMany({
       where,
