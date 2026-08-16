@@ -4,6 +4,7 @@ const ApiError = require("../utils/ApiError");
 /**
  * Subscribe an email to the newsletter via Brevo (BREVO_NEWSLETTER_LIST_ID).
  */
+//async function to subscribe to the newsletter
 const subscribeToNewsletter = async (email) => {
   const apiKey = process.env.BREVO_API_KEY;
   const listId = process.env.BREVO_NEWSLETTER_LIST_ID;
